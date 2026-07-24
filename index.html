@@ -42,17 +42,17 @@
       let simSpeed = 1;
 
       class Agent {
-        constructor(x, y, neuralNet) {
+        constructor(x, y, neuralNet, generation) {
           this.x = x ?? Math.random() * world.width;
           this.y = y ?? Math.random() * world.height;
           this.neuralNet = neuralNet ?? new NeuralNet();
           this.angle = Math.random() * Math.PI * 2;
           this.energy = 1000;
 
+          this.generation = generation ?? 0;
+
           this.fx = 0;
           this.fy = 0;
-
-          this.threatened = false;
         }
 
         update() {
@@ -133,11 +133,6 @@
             this.neuralNet.V_input[3] = dot(dx, dy, this.fx, this.fy) / dist;
             this.neuralNet.V_input[4] = cross(dx, dy, this.fx, this.fy) / dist;
             this.neuralNet.V_input[5] = 1 - dist / seeRange;
-
-            this.threatened = true;
-          } else if (this.threatened) {
-            this.threatened = false;
-            this.energy += 50;
           }
         }
 
@@ -148,7 +143,7 @@
           let childX = this.x + (Math.random() - 0.5) * 200;
           let childY = this.y + (Math.random() - 0.5) * 200;
 
-          return new Agent(childX, childY, childNeuralNet);
+          return new Agent(childX, childY, childNeuralNet, this.generation + 1);
         }
       }
 
@@ -375,7 +370,11 @@
         return x / (1 + Math.abs(x));
       }
 
+      let steps = 0;
+
       function step() {
+        steps++;
+
         for (let i = 0; i < simSpeed; i++) {
           for (let ind of population) ind.update();
           for (let ind of allFood) ind.age++;
@@ -393,6 +392,12 @@
           }
 
           if (Math.random() < 0.2) allFood.push(new Food());
+        }
+
+        if (steps % 50 === 0) {
+          let allGens = [];
+          for (let ind of population) allGens.push(ind.generation);
+          console.log(Math.max(...allGens));
         }
 
         draw();
@@ -413,12 +418,6 @@
 
         // agents
         for (let ind of population) {
-          // ctx.beginPath();
-          // ctx.arc(ind.x, ind.y, seeRange, ind.angle - (Math.PI / 2), ind.angle + (Math.PI / 2));
-          // ctx.fillStyle = "rgba(255, 0, 0, 0.1)";
-          // ctx.fill();
-          // ctx.fillStyle = "black";
-
           ctx.beginPath();
           ctx.arc(ind.x, ind.y, 8, 0, Math.PI * 2);
           ctx.fill();
