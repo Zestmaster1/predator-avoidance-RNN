@@ -1,0 +1,18 @@
+canvas {
+  border: 1px solid black;
+}
+
+th, td {
+  border: 1px solid black;
+  padding: 5px;
+  text-align: center;
+  font-size: 2em;
+}
+
+label, button {
+  font-size: 2em;
+}
+
+input[type="range"] {
+  width: 1000px;
+}
