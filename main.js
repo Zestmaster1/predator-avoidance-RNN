@@ -3,6 +3,7 @@ const ctx = world.getContext("2d");
 world.width = 2000;
 world.height = 2000;
 
+let populationDisplay = document.getElementById("popDisplay");
 let oldGenDisplay = document.getElementById("oldGenDisplay");
 let newGenDisplay = document.getElementById("newGenDisplay");
 
@@ -14,6 +15,7 @@ const mutationDelta = 0.5;
 const mutationRate = 0.2;
 const parameterMutationChance = 0.05;
 const seeRange = 150;
+const foodRate = 0.2;
 
 let population = [];
 let allFood = [];
@@ -62,7 +64,7 @@ function step() {
       // for (let i = 0; i < 10; i++) population.push(new Agent());
     }
 
-    if (Math.random() < 0.2) allFood.push(new Food());
+    if (Math.random() < foodRate) allFood.push(new Food());
   }
 
   if (stepCounter % 50 === 0) {
@@ -70,9 +72,11 @@ function step() {
       let allGens = [];
       for (let ind of population) allGens.push(ind.generation);
 
+      populationDisplay.textContent = population.length;
       oldGenDisplay.textContent = Math.min(...allGens);
       newGenDisplay.textContent = Math.max(...allGens);
     } else {
+      populationDisplay.textContent = 0;
       oldGenDisplay.textContent = 0;
       newGenDisplay.textContent = 0;
     }
