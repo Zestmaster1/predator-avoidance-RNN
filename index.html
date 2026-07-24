@@ -1,33 +1,33 @@
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="style.css">
-  </head>
-  <body>
-    <table>
-      <tr>
-        <th>oldest gen</th>
-        <th>newest gen</th>
-      </tr>
-      <tr>
-        <td id="oldGenDisplay">0</td>
-        <td id="newGenDisplay">0</td>
-      </tr>
-    </table>
-    <canvas id="world"></canvas>
-    <br>
-    <label for="simSpeed">sim speed: </label>
-    <input id="simSpeed" type="range" min="1" max="20" value="1" oninput="handleInput()">
-    <br>
-    <button onclick="for (let i = 0; i < 10; i++) population.push(new Agent());">add agents</button>
-    <button onclick="for (let i = 0; i < 5; i++) predators.push(new Predator());">add predators</button>
-    <br>
-    <button onclick="for (let ind of population) if (Math.random() < 0.5) ind.neuralNet.mutate()">irradiate</button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <table>
+    <tr>
+      <th>oldest gen</th>
+      <th>newest gen</th>
+    </tr>
+    <tr>
+      <td id="oldGenDisplay">0</td>
+      <td id="newGenDisplay">0</td>
+    </tr>
+  </table>
+  <canvas id="world"></canvas>
+  <br>
+  <label for="simSpeed">sim speed: </label>
+  <input id="simSpeed" type="range" min="1" max="20" value="1" oninput="handleInput()">
+  <br>
+  <button onclick="for (let i = 0; i < 10; i++) population.push(new Agent());">add agents</button>
+  <button onclick="for (let i = 0; i < 5; i++) predators.push(new Predator());">add predators</button>
+  <br>
+  <button onclick="for (let ind of population) if (Math.random() < 0.5) ind.neuralNet.mutate()">irradiate</button>
 
-    <script src="classes.js"></script>
-    <script src="main.js"></script>
-  </body>
-  </html>
+  <script src="classes.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
