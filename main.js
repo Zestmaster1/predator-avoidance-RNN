@@ -4,8 +4,9 @@ world.width = 2000;
 world.height = 2000;
 
 let populationDisplay = document.getElementById("popDisplay");
-let oldGenDisplay = document.getElementById("oldGenDisplay");
-let newGenDisplay = document.getElementById("newGenDisplay");
+let generationDisplay = document.getElementById("genDisplay");
+let predatorDisplay = document.getElementById("predDisplay");
+let stepsLeftDisplay = document.getElementById("stepsLeft");
 
 const inputNodes = 6;
 const hiddenNodes = 20;
@@ -13,14 +14,18 @@ const outputNodes = 2;
 
 const mutationDelta = 0.5;
 const mutationRate = 0.2;
-const parameterMutationChance = 0.05;
+const parameterMutationChance = 0.01;
 const seeRange = 150;
 const foodRate = 0.2;
+const populationSize = 100;
+const maxGenerationlength = 20000;
 
 let population = [];
 let allFood = [];
 let predators = [];
+
 let simSpeed = 1;
+let predSpeed = 0.25;
 
 function wrappedDist(a, b, range) {
   let d = b - a;
@@ -43,46 +48,76 @@ function softsign(x) {
   return x / (1 + Math.abs(x));
 }
 
-let stepCounter = 0;
+let stepCounter = maxGenerationlength;
 
 function step() {
-  stepCounter++;
-
   for (let i = 0; i < simSpeed; i++) {
+    stepCounter--;
+
     for (let ind of population) ind.update();
     for (let ind of allFood) ind.age++;
     for (let ind of predators) ind.update();
 
-    population = population.filter(ind => ind.energy > 0);
+    population = population.filter(ind => ind.energy >= 0);
     allFood = allFood.filter(ind => ind.age < 1000);
 
-    if (population.length <= 10 && population.length > 0) {
-      let newInds = [];
-      for (let ind of population) newInds.push(ind.reproduce());
-      population.push(...newInds);
-
-      // for (let i = 0; i < 10; i++) population.push(new Agent());
-    }
-
     if (Math.random() < foodRate) allFood.push(new Food());
-  }
 
-  if (stepCounter % 50 === 0) {
-    if (population.length > 0) {
+    // if (population.length <= 10 && population.length > 0) {
+    //   let newInds = [];
+    //   for (let ind of population) newInds.push(ind.reproduce());
+    //   population.push(...newInds);
+
+    //   // for (let i = 0; i < 10; i++) population.push(new Agent());
+    // }
+
+    if (population.length <= 20 || stepCounter <= 0) {
+      if (population.length === 0) {
+        for (let i = 0; i < populationSize; i++) population.push(new Agent());
+      } else {
+        allFood = [];
+        for (let ind of predators) {
+          ind.x = Math.random() * world.width;
+          ind.y = Math.random() * world.height;
+        }
+
+        let totalEnergy = 0;
+
+        for (let ind of population) {
+          totalEnergy += ind.energy;
+        }
+
+        let newPopulation = [];
+
+        for (let i = 0; i < populationSize; i++) {
+          let r = Math.random() * totalEnergy;
+          let chosen;
+          
+          for (let ind of population) {
+            r -= ind.energy;
+            if (r <= 0) {
+              chosen = ind;
+              break;
+            }
+          }
+
+          newPopulation.push(chosen.reproduce());
+        }
+
+        population = newPopulation;
+      }
+
       let allGens = [];
       for (let ind of population) allGens.push(ind.generation);
+      generationDisplay.textContent = Math.max(...allGens);
 
-      populationDisplay.textContent = population.length;
-      oldGenDisplay.textContent = Math.min(...allGens);
-      newGenDisplay.textContent = Math.max(...allGens);
-    } else {
-      populationDisplay.textContent = 0;
-      oldGenDisplay.textContent = 0;
-      newGenDisplay.textContent = 0;
+      stepCounter = maxGenerationlength;
     }
-
-    stepCounter = 0;
   }
+
+  populationDisplay.textContent = population.length;
+  predatorDisplay.textContent = predators.length;
+  stepsLeftDisplay.textContent = stepCounter;
 
   draw();
   setTimeout(() => step(), 1);
@@ -131,8 +166,10 @@ function draw() {
 
 function handleInput() {
   simSpeed = Number(document.getElementById("simSpeed").value);
+  predSpeed = Number(document.getElementById("predSpeed").value);
 }
 
-for (let i = 0; i < 20; i++) population.push(new Agent());
+for (let i = 0; i < populationSize; i++) population.push(new Agent());
+for (let i = 0; i < 5; i++) predators.push(new Predator());
 
 step();
