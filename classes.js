@@ -6,8 +6,8 @@ class Agent {
     this.angle = Math.random() * Math.PI * 2;
     this.energy = 0;
 
-    this.fx = 0;
-    this.fy = 0;
+    this.fx = Math.cos(this.angle);
+    this.fy = Math.sin(this.angle);
 
     this.generation = generation ?? 0;
   }
@@ -42,9 +42,10 @@ class Agent {
       let distSq = dx * dx + dy * dy;
 
       if (distSq < 10 ** 2) {
-        allFood.splice(allFood.indexOf(ind), 1);
-        this.energy += 1;
-        // if (this.energy > 2000) population.push(this.reproduce());
+        // allFood.splice(allFood.indexOf(ind), 1);
+        ind.x = Math.random() * world.width;
+        ind.y = Math.random() * world.height;
+        this.energy++;
         break;
       }
 
@@ -91,13 +92,9 @@ class Agent {
     }
   }
 
-  reproduce() {
-    let childNeuralNet = this.neuralNet.clone();
+  reproduce(mate) {
+    let childNeuralNet = this.neuralNet.crossover(mate.neuralNet);
     if (Math.random() < mutationRate) childNeuralNet.mutate();
-
-    // let childX = this.x + (Math.random() - 0.5) * 200;
-    // let childY = this.y + (Math.random() - 0.5) * 200;
-
     return new Agent(null, null, childNeuralNet, this.generation + 1);
   }
 }
@@ -114,6 +111,8 @@ class NeuralNet {
     this.W_input_hidden = [];
     this.W_hidden_hidden = [];
     this.W_hidden_output = [];
+
+    this.inertia = 0;
 
     if (random) this.initialize();
   }
@@ -142,7 +141,6 @@ class NeuralNet {
     for (let i = 0; i < hiddenNodes; i++) {
       let row = [];
       for (let j = 0; j < hiddenNodes; j++) {
-        // row.push(i === j ? 0 : (Math.random() - 0.5) * 3);
         row.push((Math.random() - 0.5) * 3);
       }
       this.W_hidden_hidden.push(row);
@@ -156,6 +154,10 @@ class NeuralNet {
       }
       this.W_hidden_output.push(row);
     }
+
+    // inertia
+    this.inertia = 1 - Math.random() / 2;
+    // this.inertia = Math.random();
   }
 
   update() {
@@ -175,8 +177,8 @@ class NeuralNet {
       }
 
       newHidden[i] =
-        0.6 * this.V_hidden[i] +
-        0.4 * softsign(sum);
+        this.inertia * this.V_hidden[i] +
+        (1 - this.inertia) * softsign(sum);
     }
 
     this.V_hidden = newHidden;
@@ -189,7 +191,9 @@ class NeuralNet {
         sum += this.V_hidden[j] * this.W_hidden_output[j][i];
       }
 
-      this.V_output[i] = softsign(sum);
+      this.V_output[i] =
+        this.inertia * this.V_output[i] +
+        (1 - this.inertia) * softsign(sum);
     }
     
     for (let i = 0; i < inputNodes; i++) this.V_input[i] = 0;
@@ -204,6 +208,57 @@ class NeuralNet {
     child.W_input_hidden = this.W_input_hidden.map(r => r.slice());
     child.W_hidden_hidden = this.W_hidden_hidden.map(r => r.slice());
     child.W_hidden_output = this.W_hidden_output.map(r => r.slice());
+
+    child.inertia = this.inertia;
+
+    return child;
+  }
+
+  crossover(mate) {
+    let child = this.clone();
+
+    // hidden node biases
+    for (let i = 0; i < hiddenNodes; i++) {
+      if (Math.random() < 0.5) {
+        child.B_hidden[i] = mate.B_hidden[i];
+      }
+    }
+
+    // output node biases
+    for (let i = 0; i < outputNodes; i++) {
+      if (Math.random() < 0.5) {
+        child.B_output[i] = mate.B_output[i];
+      }
+    }
+
+    // input -> hidden
+    for (let i = 0; i < inputNodes; i++) {
+      for (let j = 0; j < hiddenNodes; j++) {
+        if (Math.random() < 0.5) {
+          child.W_input_hidden[i][j] = mate.W_input_hidden[i][j];
+        }
+      }
+    }
+
+    // hidden -> hidden
+    for (let i = 0; i < hiddenNodes; i++) {
+      for (let j = 0; j < hiddenNodes; j++) {
+        if (Math.random() < 0.5) {
+          child.W_hidden_hidden[i][j] = mate.W_hidden_hidden[i][j];
+        }
+      }
+    }
+
+    // hidden -> output
+    for (let i = 0; i < hiddenNodes; i++) {
+      for (let j = 0; j < outputNodes; j++) {
+        if (Math.random() < 0.5) {
+          child.W_hidden_output[i][j] = mate.W_hidden_output[i][j];
+        }
+      }
+    }
+
+    if (Math.random() < 0.5) child.inertia = mate.inertia;
 
     return child;
   }
@@ -248,6 +303,12 @@ class NeuralNet {
         }
       }
     }
+
+    // interia
+
+    if (Math.random() < parameterMutationChance) {
+      this.inertia = Math.max(0, Math.min(1, this.inertia + (Math.random() - 0.5) * mutationDelta));
+    }
   }
 }
 
@@ -256,19 +317,19 @@ class Food {
     this.x = Math.random() * world.width;
     this.y = Math.random() * world.height;
     this.age = 0;
-
-    this.vx = 0;
-    this.vy = 0;
   }
 }
 
 class Predator {
-  constructor() {
+  constructor(cooldown) {
     this.x = Math.random() * world.width;
     this.y = Math.random() * world.height;
+    this.cooldown = cooldown ?? 0;
   }
 
   update() {
+    if (this.cooldown > 0) this.cooldown--;
+
     // prevent overlap
     for (let other of predators) {
       if (other === this) continue;
@@ -280,6 +341,7 @@ class Predator {
       if (distSq < 15 ** 2) {
         this.x = Math.random() * world.width;
         this.y = Math.random() * world.height;
+        this.cooldown = predatorCooldown;
 
         return;
       }
@@ -288,22 +350,26 @@ class Predator {
     let nearest;
     let minDist = 175 ** 2;
     
-    for (let ind of population) {
-      let dx = wrappedDist(this.x, ind.x, world.width);
-      let dy = wrappedDist(this.y, ind.y, world.height);
-      let distSq = dx * dx + dy * dy;
+    if (this.cooldown === 0) {
+      for (let ind of population) {
+        let dx = wrappedDist(this.x, ind.x, world.width);
+        let dy = wrappedDist(this.y, ind.y, world.height);
+        let distSq = dx * dx + dy * dy;
 
-      if (distSq < 10 ** 2) {
-        // population.splice(population.indexOf(ind), 1);
-        ind.energy -= 5;
-        this.x = Math.random() * world.width;
-        this.y = Math.random() * world.height;
-        break;
-      }
+        if (distSq < 20 ** 2) {
+          // population.splice(population.indexOf(ind), 1);
+          ind.energy -= 5;
+          this.x = Math.random() * world.width;
+          this.y = Math.random() * world.height;
 
-      if (distSq < minDist) {
-        nearest = ind;
-        minDist = distSq;
+          this.cooldown = predatorCooldown;
+          break;
+        }
+
+        if (distSq < minDist) {
+          nearest = ind;
+          minDist = distSq;
+        }
       }
     }
 

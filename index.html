@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Evolution Simulation</title>
+  <title>RNN predator avoidance evolution</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -39,13 +39,14 @@
             id="simSpeed"
             type="range"
             min="1"
-            max="20"
+            max="25"
             value="1"
             oninput="handleInput()">
 
           <button onclick="
             document.getElementById('simSpeed').value = 1;
-            handleInput();">R</button>
+            handleInput();">
+            R</button>
         </div>
 
         <div class="slider-row">
@@ -53,7 +54,7 @@
           <input
             id="predSpeed"
             type="range"
-            min="0.1"
+            min="0"
             max="0.5"
             step="0.05"
             value="0.25"
@@ -61,7 +62,8 @@
 
           <button onclick="
             document.getElementById('predSpeed').value = 0.25;
-            handleInput();">R</button>
+            handleInput();">
+            R</button>
         </div>
       </section>
 
@@ -71,13 +73,16 @@
         <div class="button-group">
           <button onclick="
             for (let i = 0; i < 10; i++)
-              population.push(new Agent());">Add Agents</button>
+              population.push(new Agent());">
+              Add Agents</button>
 
           <button onclick="
             for (let i = 0; i < 5; i++)
-              predators.push(new Predator());">Add Predators</button>
+              predators.push(new Predator(predatorCooldown));">
+              Add Predators</button>
 
-          <button onclick="predators.splice(0, 1)">Remove Predator</button>
+          <button onclick="predators.splice(0, 1)">
+            Remove Predator</button>
         </div>
       </section>
 
@@ -88,6 +93,10 @@
           for (let ind of population)
             if (Math.random() < 0.5)
               ind.neuralNet.mutate();">Irradiate Population</button>
+      </section>
+
+      <section class="panel">
+        <canvas id="graph"></canvas>
       </section>
 
     </div>
