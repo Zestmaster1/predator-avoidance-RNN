@@ -4,24 +4,22 @@ class Agent {
     this.y = y ?? Math.random() * world.height;
     this.neuralNet = neuralNet ?? new NeuralNet();
     this.angle = Math.random() * Math.PI * 2;
-    this.energy = 1000;
-
-    this.generation = generation ?? 0;
+    this.energy = 0;
 
     this.fx = 0;
     this.fy = 0;
+
+    this.generation = generation ?? 0;
   }
 
   update() {
-    this.energy--;
-
     this.senseNearestFood();
     this.senseNearestPredator();
 
     this.neuralNet.update();
     
     this.angle += this.neuralNet.V_output[0] / 10;
-    let speed = Math.max(0, this.neuralNet.V_output[1]) / 2;
+    let speed = Math.max(0, this.neuralNet.V_output[1]) / 1.5;
     this.x += Math.cos(this.angle) * speed;
     this.y += Math.sin(this.angle) * speed;
 
@@ -45,8 +43,8 @@ class Agent {
 
       if (distSq < 10 ** 2) {
         allFood.splice(allFood.indexOf(ind), 1);
-        this.energy += 500;
-        if (this.energy > 2500) population.push(this.reproduce());
+        this.energy += 1;
+        // if (this.energy > 2000) population.push(this.reproduce());
         break;
       }
 
@@ -97,10 +95,10 @@ class Agent {
     let childNeuralNet = this.neuralNet.clone();
     if (Math.random() < mutationRate) childNeuralNet.mutate();
 
-    let childX = this.x + (Math.random() - 0.5) * 200;
-    let childY = this.y + (Math.random() - 0.5) * 200;
+    // let childX = this.x + (Math.random() - 0.5) * 200;
+    // let childY = this.y + (Math.random() - 0.5) * 200;
 
-    return new Agent(childX, childY, childNeuralNet, this.generation + 1);
+    return new Agent(null, null, childNeuralNet, this.generation + 1);
   }
 }
 
@@ -166,10 +164,12 @@ class NeuralNet {
     for (let i = 0; i < hiddenNodes; i++) {
       let sum = this.B_hidden[i];
 
+      // input -> hidden
       for (let j = 0; j < inputNodes; j++) {
         sum += this.V_input[j] * this.W_input_hidden[j][i];
       }
 
+      // hidden -> hidden
       for (let j = 0; j < hiddenNodes; j++) {
         sum += this.V_hidden[j] * this.W_hidden_hidden[j][i];
       }
@@ -181,6 +181,7 @@ class NeuralNet {
 
     this.V_hidden = newHidden;
 
+    // hidden -> output
     for (let i = 0; i < outputNodes; i++) {
       let sum = this.B_output[i];
 
@@ -268,6 +269,22 @@ class Predator {
   }
 
   update() {
+    // prevent overlap
+    for (let other of predators) {
+      if (other === this) continue;
+
+      let dx = wrappedDist(this.x, other.x, world.width);
+      let dy = wrappedDist(this.y, other.y, world.height);
+      let distSq = dx * dx + dy * dy;
+
+      if (distSq < 15 ** 2) {
+        this.x = Math.random() * world.width;
+        this.y = Math.random() * world.height;
+
+        return;
+      }
+    }
+
     let nearest;
     let minDist = 175 ** 2;
     
@@ -277,7 +294,8 @@ class Predator {
       let distSq = dx * dx + dy * dy;
 
       if (distSq < 10 ** 2) {
-        population.splice(population.indexOf(ind), 1);
+        // population.splice(population.indexOf(ind), 1);
+        ind.energy -= 5;
         this.x = Math.random() * world.width;
         this.y = Math.random() * world.height;
         break;
@@ -295,8 +313,8 @@ class Predator {
       let distSq = dx * dx + dy * dy;
       let dist = Math.sqrt(distSq);
 
-      this.x += dx / dist / 5;
-      this.y += dy / dist / 5;
+      this.x += dx / dist * predSpeed;
+      this.y += dy / dist * predSpeed;
     }
 
     if (this.x < 0) this.x += world.width;
