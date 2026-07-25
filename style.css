@@ -1,18 +1,85 @@
+body {
+  margin: 10px;
+  font-family: Arial, sans-serif;
+}
+
 canvas {
   border: 1px solid black;
 }
 
-th, td {
+.container {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  min-width: 500px;
+}
+
+.panel {
+  border: 1px solid #999;
+  border-radius: 8px;
+  padding: 15px;
+  background: #fafafa;
+}
+
+.panel h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.4em;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
   border: 1px solid black;
-  padding: 5px;
+  padding: 8px;
   text-align: center;
-  font-size: 2em;
 }
 
-label, button {
-  font-size: 2em;
+th {
+  font-size: 1.2em;
 }
 
-input[type="range"] {
-  width: 1000px;
+td {
+  font-size: 1.8em;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.slider-row:last-child {
+  margin-bottom: 0;
+}
+
+.slider-row label {
+  width: 180px;
+  flex-shrink: 0;
+}
+
+.slider-row input[type="range"] {
+  flex: 1;
+}
+
+button {
+  font-size: 1.1em;
+  padding: 6px 12px;
+}
+
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
