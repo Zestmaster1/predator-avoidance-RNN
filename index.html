@@ -3,31 +3,95 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Evolution Simulation</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <table>
-    <tr>
-      <th>population</th>
-      <th>oldest gen</th>
-      <th>newest gen</th>
-    </tr>
-    <tr>
-      <td id="popDisplay">0</td>
-      <td id="oldGenDisplay">0</td>
-      <td id="newGenDisplay">0</td>
-    </tr>
-  </table>
-  <canvas id="world"></canvas>
-  <br>
-  <label for="simSpeed">sim speed: </label>
-  <input id="simSpeed" type="range" min="1" max="20" value="1" oninput="handleInput()">
-  <br>
-  <button onclick="for (let i = 0; i < 10; i++) population.push(new Agent());">add agents</button>
-  <button onclick="for (let i = 0; i < 5; i++) predators.push(new Predator());">add predators</button>
-  <br>
-  <button onclick="for (let ind of population) if (Math.random() < 0.5) ind.neuralNet.mutate()">irradiate</button>
+  <div class="container">
+    <canvas id="world"></canvas>
+    
+    <div class="controls">
+      <section class="panel">
+        <h2>Statistics</h2>
+
+        <table>
+          <tr>
+            <th>Population</th>
+            <th>Generation</th>
+            <th>Predators</th>
+            <th>Steps Left</th>
+          </tr>
+          <tr>
+            <td id="popDisplay">0</td>
+            <td id="genDisplay">0</td>
+            <td id="predDisplay">0</td>
+            <td id="stepsLeft">0</td>
+          </tr>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>Simulation Settings</h2>
+
+        <div class="slider-row">
+          <label for="simSpeed">Simulation Speed</label>
+          <input
+            id="simSpeed"
+            type="range"
+            min="1"
+            max="20"
+            value="1"
+            oninput="handleInput()">
+
+          <button onclick="
+            document.getElementById('simSpeed').value = 1;
+            handleInput();">R</button>
+        </div>
+
+        <div class="slider-row">
+          <label for="predSpeed">Predator Speed</label>
+          <input
+            id="predSpeed"
+            type="range"
+            min="0.1"
+            max="0.5"
+            step="0.05"
+            value="0.25"
+            oninput="handleInput()">
+
+          <button onclick="
+            document.getElementById('predSpeed').value = 0.25;
+            handleInput();">R</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Population Controls</h2>
+
+        <div class="button-group">
+          <button onclick="
+            for (let i = 0; i < 10; i++)
+              population.push(new Agent());">Add Agents</button>
+
+          <button onclick="
+            for (let i = 0; i < 5; i++)
+              predators.push(new Predator());">Add Predators</button>
+
+          <button onclick="predators.splice(0, 1)">Remove Predator</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Interactions</h2>
+
+        <button onclick="
+          for (let ind of population)
+            if (Math.random() < 0.5)
+              ind.neuralNet.mutate();">Irradiate Population</button>
+      </section>
+
+    </div>
+  </div>
 
   <script src="classes.js"></script>
   <script src="main.js"></script>
