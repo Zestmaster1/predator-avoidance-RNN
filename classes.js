@@ -43,6 +43,7 @@ class Agent {
 
       if (distSq < 10 ** 2) {
         // allFood.splice(allFood.indexOf(ind), 1);
+        ind.age = Infinity;
         ind.x = Math.random() * world.width;
         ind.y = Math.random() * world.height;
         this.energy++;
@@ -94,8 +95,20 @@ class Agent {
 
   reproduce(mate) {
     let childNeuralNet = this.neuralNet.crossover(mate.neuralNet);
-    if (Math.random() < mutationRate) childNeuralNet.mutate();
+    if (mutation && Math.random() < mutationRate) childNeuralNet.mutate();
     return new Agent(null, null, childNeuralNet, this.generation + 1);
+  }
+
+  export() {
+    return {
+      B_hidden: this.neuralNet.B_hidden,
+      B_output: this.neuralNet.B_output,
+      W_input_hidden: this.neuralNet.W_input_hidden,
+      W_hidden_hidden: this.neuralNet.W_hidden_hidden,
+      W_hidden_output: this.neuralNet.W_hidden_output,
+      inertia: this.neuralNet.inertia,
+      generation: this.generation
+    };
   }
 }
 
@@ -191,9 +204,11 @@ class NeuralNet {
         sum += this.V_hidden[j] * this.W_hidden_output[j][i];
       }
 
-      this.V_output[i] =
-        this.inertia * this.V_output[i] +
-        (1 - this.inertia) * softsign(sum);
+      // this.V_output[i] =
+      //   this.inertia * this.V_output[i] +
+      //   (1 - this.inertia) * softsign(sum);
+
+      this.V_output[i] = softsign(sum);
     }
     
     for (let i = 0; i < inputNodes; i++) this.V_input[i] = 0;
@@ -316,7 +331,7 @@ class Food {
   constructor() {
     this.x = Math.random() * world.width;
     this.y = Math.random() * world.height;
-    this.age = 0;
+    this.timer = Math.floor(Math.random() * 2500);
   }
 }
 

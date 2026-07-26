@@ -65,6 +65,11 @@
             handleInput();">
             R</button>
         </div>
+
+        <div class="slider-row">
+          <label for="mutation">mutation: </label>
+          <input id="mutation" type="checkbox" oninput="handleInput()" checked>
+        </div>
       </section>
 
       <section class="panel">
@@ -93,10 +98,19 @@
           for (let ind of population)
             if (Math.random() < 0.5)
               ind.neuralNet.mutate();">Irradiate Population</button>
+
+        <button onclick="saveAgent(lastBest);">download</button>
       </section>
 
       <section class="panel">
         <canvas id="graph"></canvas>
+      </section>
+
+      <section class="panel">
+        <h2>upload agent</h2>
+        <input type="file" id="networkFile" accept=".json">
+        <button onclick="loadAgent()">Upload Agent</button>
+        <button onclick="refreshWithAgent();">refresh with agent</button>
       </section>
 
     </div>
@@ -104,5 +118,6 @@
 
   <script src="classes.js"></script>
   <script src="main.js"></script>
+  <script src="saving.js"></script>
 </body>
 </html>
