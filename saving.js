@@ -41,7 +41,9 @@ function loadAgent() {
 
   reader.onload = function(event) {
     let data = JSON.parse(event.target.result);
-    population.push(importAgent(data));
+    let agent = importAgent(data);
+    if (uploadMarkers) agent.uploaded = true;
+    population.push(agent);
   };
 
   reader.readAsText(file);

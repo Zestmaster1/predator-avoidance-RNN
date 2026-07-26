@@ -114,8 +114,14 @@
       <section class="panel">
         <h2>upload agent</h2>
         <input type="file" id="networkFile" accept=".json">
+        <br>
+        <br>
         <button onclick="loadAgent()">Upload Agent</button>
         <button onclick="refreshWithAgent();">refresh with agent</button>
+        <br>
+        <br>
+        <label for="uploadMarkers">upload markers: </label>
+        <input id="uploadMarkers" type="checkbox" oninput="handleInput()">
       </section>
 
     </div>

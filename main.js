@@ -35,7 +35,8 @@ let predators = [];
 
 let simSpeed = 1;
 let predSpeed = 0.25;
-let mutation = true;
+let mutation = document.getElementById("mutation").checked;
+let uploadMarkers = document.getElementById("uploadMarkers").checked;
 
 function wrappedDist(a, b, range) {
   let d = b - a;
@@ -155,6 +156,11 @@ function handleInput() {
   simSpeed = Number(document.getElementById("simSpeed").value);
   predSpeed = Number(document.getElementById("predSpeed").value);
   mutation = document.getElementById("mutation").checked;
+  uploadMarkers = document.getElementById("uploadMarkers").checked;
+
+  // if (uploadMarkers === false) {
+  //   for (let ind of population) ind.uploaded = false;
+  // }
 }
 
 let speciesThreshold = 0;
@@ -298,7 +304,6 @@ function updateGraph() {
   }
 }
 
-ctx.strokeStyle = "red";
 ctx.lineWidth = 3;
 
 function draw() {
@@ -325,12 +330,22 @@ function draw() {
     ctx.arc(ind.x, ind.y, 8, 0, Math.PI * 2);
     ctx.fill();
     
+    ctx.strokeStyle = "red";
+
     ctx.beginPath();
     ctx.moveTo(ind.x, ind.y);
     let x = ind.x + 20 * Math.cos(ind.angle);
     let y = ind.y + 20 * Math.sin(ind.angle);
     ctx.lineTo(x, y);
     ctx.stroke();
+
+    if (ind.uploaded) {
+      ctx.strokeStyle = "rgba(0, 0, 255, 0.25)";
+
+      ctx.beginPath();
+      ctx.arc(ind.x, ind.y, 15, 0, Math.PI * 2);
+      ctx.stroke();
+    }
   }
 
   // predators

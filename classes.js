@@ -10,6 +10,8 @@ class Agent {
     this.fy = Math.sin(this.angle);
 
     this.generation = generation ?? 0;
+
+    this.uploaded = false;
   }
 
   update() {
@@ -96,7 +98,11 @@ class Agent {
   reproduce(mate) {
     let childNeuralNet = this.neuralNet.crossover(mate.neuralNet);
     if (mutation && Math.random() < mutationRate) childNeuralNet.mutate();
-    return new Agent(null, null, childNeuralNet, this.generation + 1);
+    let child = new Agent(null, null, childNeuralNet, this.generation + 1);
+    if (uploadMarkers) {
+      child.uploaded = this.uploaded ? this.uploaded : mate.uploaded;
+    } else child.uploaded = false;
+    return child;
   }
 
   export() {
