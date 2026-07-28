@@ -7,7 +7,7 @@ function saveAgent(agent) {
 
   let a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "network.json";
+  a.download = "networkdownload.json";
   a.click();
 }
 
@@ -21,7 +21,7 @@ function importAgent(data) {
   net.W_hidden_hidden = data.W_hidden_hidden;
   net.W_hidden_output = data.W_hidden_output;
 
-  net.inertia = data.inertia;
+  net.alpha = data.alpha;
 
   let agent = new Agent(null, null, net);
   agent.generation = data.generation;

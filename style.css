@@ -1,26 +1,40 @@
 body {
-  margin: 10px;
   font-family: Arial, sans-serif;
 }
 
 canvas {
   border: 1px solid black;
+  gap: 0px;
+}
+
+#world {
+  width: min(90vw, 90vh);
+  height: min(90vw, 90vh);
+}
+
+#graph {
+  width: 100%;
 }
 
 .container {
   display: flex;
   align-items: flex-start;
   gap: 20px;
+  width: 1000px;
 }
 
 .controls {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  min-width: 500px;
+  gap: 5px;
+  margin-left: -15px;
+  --scale: calc(60vh / 1000px);
+  transform-origin: top left;
+  transform: scale(var(--scale));
 }
 
 .panel {
+  width: 550px;
   border: 1px solid #999;
   border-radius: 8px;
   padding: 15px;
@@ -30,7 +44,6 @@ canvas {
 .panel h2 {
   margin-top: 0;
   margin-bottom: 15px;
-  font-size: 1.4em;
 }
 
 table {
@@ -56,8 +69,8 @@ td {
 .slider-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 5px;
+  margin-bottom: 20px;
 }
 
 .slider-row:last-child {
@@ -65,7 +78,7 @@ td {
 }
 
 .slider-row label {
-  width: 180px;
+  width: 250px;
   flex-shrink: 0;
 }
 
@@ -75,7 +88,6 @@ td {
 
 button {
   font-size: 1.5em;
-  padding: 6px 12px;
 }
 
 .button-group {

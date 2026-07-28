@@ -34,7 +34,7 @@
         <h2>Simulation Settings</h2>
 
         <div class="slider-row">
-          <label for="simSpeed">Simulation Speed</label>
+          <label for="simSpeed">Simulation Speed (1 - 25X): </label>
           <input
             id="simSpeed"
             type="range"
@@ -50,7 +50,7 @@
         </div>
 
         <div class="slider-row">
-          <label for="predSpeed">Predator Speed</label>
+          <label for="predSpeed">Predator Speed (0 - 200%): </label>
           <input
             id="predSpeed"
             type="range"
@@ -67,8 +67,36 @@
         </div>
 
         <div class="slider-row">
-          <label for="mutation">mutation: </label>
-          <input id="mutation" type="checkbox" oninput="handleInput()" checked>
+          <label for="crossoverChance">Crossover Chance (0 - 100%): </label>
+          <input
+            id="crossoverChance"
+            type="range"
+            min="0"
+            max="1"
+            step="0.1"
+            value="0.5"
+            oninput="handleInput()">
+
+          <button onclick="
+            document.getElementById('crossoverChance').value = 0.5;
+            handleInput();">
+            R</button>
+        </div>
+
+        <div class="slider-row">
+          <label for="mutationRate">Mutation Rate (0 - 100%): </label>
+          <input
+            id="mutationRate"
+            type="range"
+            min="0"
+            max="1"
+            step="0.1"
+            value="0.1"
+            oninput="handleInput()">
+          <button onclick="
+            document.getElementById('mutationRate').value = 0.1;
+            handleInput();">
+            R</button>
         </div>
       </section>
 
@@ -94,12 +122,14 @@
       <section class="panel">
         <h2>Interactions</h2>
 
-        <button onclick="
-          for (let ind of population)
-            if (Math.random() < 0.5)
-              ind.neuralNet.mutate();">Irradiate Population</button>
+        <div class="button-group">
+          <button onclick="
+            for (let ind of population)
+              if (Math.random() < 0.5)
+                ind.neuralNet.mutate();">Irradiate Population</button>
 
-        <button onclick="saveAgent(lastBest);">download</button>
+          <button onclick="saveAgent(lastBest);">download last best</button>
+        </div>
       </section>
 
       <section class="panel">
@@ -107,8 +137,9 @@
         <br>
         <p>black = agent population</p>
         <p>red = predator population</p>
-        <p>blue = avg neural net inertia</p>
-        <p>green = proportion of unique individuals in %</p>
+        <p>blue = alpha; avg neural net alpha coefficient</p>
+        <p>green = diversity; proportion of unique individuals in %</p>
+        <p>purple = avg energy / 100</p>
       </section>
 
       <section class="panel">
@@ -116,8 +147,10 @@
         <input type="file" id="networkFile" accept=".json">
         <br>
         <br>
-        <button onclick="loadAgent()">Upload Agent</button>
-        <button onclick="refreshWithAgent();">refresh with agent</button>
+        <div class="button-group">
+          <button onclick="loadAgent()">Upload Agent</button>
+          <button onclick="refreshWithAgent();">refresh with agent</button>
+        </div>
         <br>
         <br>
         <label for="uploadMarkers">upload markers: </label>

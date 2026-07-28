@@ -18,14 +18,11 @@ const hiddenNodes = 20;
 const outputNodes = 2;
 
 const mutationDelta = 0.5;
-const mutationRate = 0.1;
 const parameterMutationChance = 0.01;
-const seeRange = 150;
-const foodRate = 0.2;
+const seeRange = 200;
 const populationSize = 100;
-const maxGenerationlength = 15000;
+const maxGenerationlength = 10000;
 const genePoolSize = 20;
-const crossoverChance = 0.5;
 const predatorCooldown = 200;
 const foodCount = 100;
 
@@ -33,9 +30,11 @@ let population = [];
 let allFood = [];
 let predators = [];
 
-let simSpeed = 1;
-let predSpeed = 0.25;
-let mutation = document.getElementById("mutation").checked;
+let simSpeed = Number(document.getElementById("simSpeed").value);
+let predSpeed = Number(document.getElementById("predSpeed").value);
+let crossoverChance = Number(document.getElementById("crossoverChance").value);
+
+let mutationRate = document.getElementById("mutationRate").value;
 let uploadMarkers = document.getElementById("uploadMarkers").checked;
 
 function wrappedDist(a, b, range) {
@@ -123,9 +122,15 @@ function step() {
             }
           }
 
-          let mate = Math.random() < crossoverChance ?
-          population[Math.floor(Math.random() * mateSearchRange)] :
-          chosen;
+          let mate = chosen;
+          
+          if (Math.random() < crossoverChance) {
+            mate = chosen;
+            while (mate === chosen) {
+              mate = population[Math.floor(Math.random() * mateSearchRange)];
+            }
+          }
+
           newPopulation.push(chosen.reproduce(mate));
         }
 
@@ -155,12 +160,9 @@ function displayStats() {
 function handleInput() {
   simSpeed = Number(document.getElementById("simSpeed").value);
   predSpeed = Number(document.getElementById("predSpeed").value);
-  mutation = document.getElementById("mutation").checked;
+  crossoverChance =  Number(document.getElementById("crossoverChance").value);
+  mutationRate = Number(document.getElementById("mutationRate").value);
   uploadMarkers = document.getElementById("uploadMarkers").checked;
-
-  // if (uploadMarkers === false) {
-  //   for (let ind of population) ind.uploaded = false;
-  // }
 }
 
 let speciesThreshold = 0;
@@ -180,9 +182,7 @@ function diversity() {
       }
     }
 
-    if (!found) {
-      representatives.push(agent);
-    }
+    if (!found) representatives.push(agent);
   }
 
   return representatives.length;
@@ -202,14 +202,14 @@ function genomeDistance(a, b) {
 }
 
 graphCtx.lineWidth = 5;
-graphCtx.globalAlpha = 0.75;
 
 let dataSpan = 20;
 
 let popPoints = new Array(dataSpan).fill(0);
 let predPoints = new Array(dataSpan).fill(0);
-let inertiaPoints = new Array(dataSpan).fill(0);
 let diversityPoints = new Array(dataSpan).fill(0);
+let alphaPoints = new Array(dataSpan).fill(0);
+let energyPoints = new Array(dataSpan).fill(0);
 
 function updateGraph() {
   graphCtx.clearRect(0, 0, graph.width, graph.height);
@@ -240,12 +240,28 @@ function updateGraph() {
   popPoints.push(population.length);
   predPoints.splice(0, 1);
   predPoints.push(predators.length);
-  inertiaPoints.splice(0, 1);
-  let inertiaSum = 0;
-  for (let ind of population) inertiaSum += ind.neuralNet.inertia;
-  inertiaPoints.push(inertiaSum / population.length);
+
   diversityPoints.splice(0, 1);
-  diversityPoints.push(diversity() / population.length);
+  alphaPoints.splice(0, 1);
+  energyPoints.splice(0, 1);
+
+  let alphaSum = 0;
+  let energySum = 0;
+  if (population.length > 0) {
+
+    for (let ind of population) {
+      alphaSum += ind.neuralNet.alpha;
+      energySum += ind.energy;
+    }
+
+    diversityPoints.push(diversity() / population.length);
+    alphaPoints.push(alphaSum / population.length);
+    energyPoints.push(energySum / population.length);
+  } else {
+    diversityPoints.push(0);
+    alphaPoints.push(0);
+    energyPoints.push(0);
+  }
 
   // population
   graphCtx.strokeStyle = "black";
@@ -262,7 +278,7 @@ function updateGraph() {
   }
 
   // predators
-  graphCtx.strokeStyle = "red";
+  graphCtx.strokeStyle = "rgba(255, 0, 0, 0.5)";
   for (let i = 0; i < predPoints.length - 1; i++) {
     let x = (i / (predPoints.length - 1)) * graph.width;
     let y = graph.height - (predPoints[i] / populationSize) * graph.height;
@@ -271,20 +287,6 @@ function updateGraph() {
     graphCtx.moveTo(x, y);
     let x2 = ((i + 1) / (predPoints.length - 1)) * graph.width;
     let y2 = graph.height - (predPoints[i + 1] / populationSize) * graph.height;
-    graphCtx.lineTo(x2, y2);
-    graphCtx.stroke();
-  }
-
-  // avg inertia
-  graphCtx.strokeStyle = "rgba(0, 0, 255, 0.5)";
-  for (let i = 0; i < inertiaPoints.length - 1; i++) {
-    let x = (i / (inertiaPoints.length - 1)) * graph.width;
-    let y = graph.height - (inertiaPoints[i]) * graph.height;
-
-    graphCtx.beginPath();
-    graphCtx.moveTo(x, y);
-    let x2 = ((i + 1) / (inertiaPoints.length - 1)) * graph.width;
-    let y2 = graph.height - (inertiaPoints[i + 1]) * graph.height;
     graphCtx.lineTo(x2, y2);
     graphCtx.stroke();
   }
@@ -302,9 +304,38 @@ function updateGraph() {
     graphCtx.lineTo(x2, y2);
     graphCtx.stroke();
   }
+
+  // avg alpha
+  graphCtx.strokeStyle = "rgba(0, 0, 255, 0.5)";
+  for (let i = 0; i < alphaPoints.length - 1; i++) {
+    let x = (i / (alphaPoints.length - 1)) * graph.width;
+    let y = graph.height - (alphaPoints[i]) * graph.height;
+
+    graphCtx.beginPath();
+    graphCtx.moveTo(x, y);
+    let x2 = ((i + 1) / (alphaPoints.length - 1)) * graph.width;
+    let y2 = graph.height - (alphaPoints[i + 1]) * graph.height;
+    graphCtx.lineTo(x2, y2);
+    graphCtx.stroke();
+  }
+
+  // avg energy
+  graphCtx.strokeStyle = "rgba(255, 0, 255, 0.5)";
+  for (let i = 0; i < energyPoints.length - 1; i++) {
+    let x = (i / (energyPoints.length - 1)) * graph.width;
+    let y = graph.height - (energyPoints[i] / 100) * graph.height;
+
+    graphCtx.beginPath();
+    graphCtx.moveTo(x, y);
+    let x2 = ((i + 1) / (energyPoints.length - 1)) * graph.width;
+    let y2 = graph.height - (energyPoints[i + 1] / 100) * graph.height;
+    graphCtx.lineTo(x2, y2);
+    graphCtx.stroke();
+  }
 }
 
 ctx.lineWidth = 3;
+ctx.strokeStyle = "red";
 
 function draw() {
   ctx.clearRect(0, 0, world.width, world.height);
@@ -327,17 +358,15 @@ function draw() {
     // ctx.fillStyle = "black";
 
     ctx.beginPath();
-    ctx.arc(ind.x, ind.y, 8, 0, Math.PI * 2);
-    ctx.fill();
-    
-    ctx.strokeStyle = "red";
-
-    ctx.beginPath();
     ctx.moveTo(ind.x, ind.y);
-    let x = ind.x + 20 * Math.cos(ind.angle);
-    let y = ind.y + 20 * Math.sin(ind.angle);
+    let x = ind.x + 20 * ind.fx;
+    let y = ind.y + 20 * ind.fy;
     ctx.lineTo(x, y);
     ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(ind.x, ind.y, 8, 0, Math.PI * 2);
+    ctx.fill();
 
     if (ind.uploaded) {
       ctx.strokeStyle = "rgba(0, 0, 255, 0.25)";
@@ -345,6 +374,8 @@ function draw() {
       ctx.beginPath();
       ctx.arc(ind.x, ind.y, 15, 0, Math.PI * 2);
       ctx.stroke();
+
+      ctx.strokeStyle = "red";
     }
   }
 
@@ -360,6 +391,7 @@ function draw() {
   }
 }
 
+updateGraph();
 for (let i = 0; i < populationSize; i++) population.push(new Agent());
 for (let i = 0; i < 10; i++) predators.push(new Predator(predatorCooldown));
 for (let i = 0; i < foodCount; i++) allFood.push(new Food());

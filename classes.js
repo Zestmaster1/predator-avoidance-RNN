@@ -82,6 +82,11 @@ class Agent {
         nearest = ind;
         minDist = distSq;
       }
+
+      if (distSq < ind.nearestAgent.distSq) {
+        ind.nearestAgent.agent = this;
+        ind.nearestAgent.distSq = distSq;
+      }
     }
 
     if (nearest) {
@@ -97,7 +102,7 @@ class Agent {
 
   reproduce(mate) {
     let childNeuralNet = this.neuralNet.crossover(mate.neuralNet);
-    if (mutation && Math.random() < mutationRate) childNeuralNet.mutate();
+    if (Math.random() < mutationRate) childNeuralNet.mutate();
     let child = new Agent(null, null, childNeuralNet, this.generation + 1);
     if (uploadMarkers) {
       child.uploaded = this.uploaded ? this.uploaded : mate.uploaded;
@@ -112,7 +117,7 @@ class Agent {
       W_input_hidden: this.neuralNet.W_input_hidden,
       W_hidden_hidden: this.neuralNet.W_hidden_hidden,
       W_hidden_output: this.neuralNet.W_hidden_output,
-      inertia: this.neuralNet.inertia,
+      alpha: this.neuralNet.alpha,
       generation: this.generation
     };
   }
@@ -131,7 +136,7 @@ class NeuralNet {
     this.W_hidden_hidden = [];
     this.W_hidden_output = [];
 
-    this.inertia = 0;
+    this.alpha = 0;
 
     if (random) this.initialize();
   }
@@ -175,7 +180,7 @@ class NeuralNet {
     }
 
     // inertia
-    this.inertia = 1 - Math.random() / 2;
+    this.alpha = Math.random() / 2;
     // this.inertia = Math.random();
   }
 
@@ -196,8 +201,8 @@ class NeuralNet {
       }
 
       newHidden[i] =
-        this.inertia * this.V_hidden[i] +
-        (1 - this.inertia) * softsign(sum);
+        (1 - this.alpha) * this.V_hidden[i] +
+        this.alpha * softsign(sum);
     }
 
     this.V_hidden = newHidden;
@@ -230,7 +235,7 @@ class NeuralNet {
     child.W_hidden_hidden = this.W_hidden_hidden.map(r => r.slice());
     child.W_hidden_output = this.W_hidden_output.map(r => r.slice());
 
-    child.inertia = this.inertia;
+    child.alpha = this.alpha;
 
     return child;
   }
@@ -279,7 +284,7 @@ class NeuralNet {
       }
     }
 
-    if (Math.random() < 0.5) child.inertia = mate.inertia;
+    if (Math.random() < 0.5) child.alpha = mate.alpha;
 
     return child;
   }
@@ -325,10 +330,10 @@ class NeuralNet {
       }
     }
 
-    // interia
+    // alpha
 
     if (Math.random() < parameterMutationChance) {
-      this.inertia = Math.max(0, Math.min(1, this.inertia + (Math.random() - 0.5) * mutationDelta));
+      this.alpha = Math.max(0, Math.min(1, this.alpha + (Math.random() - 0.5) * mutationDelta));
     }
   }
 }
@@ -346,6 +351,8 @@ class Predator {
     this.x = Math.random() * world.width;
     this.y = Math.random() * world.height;
     this.cooldown = cooldown ?? 0;
+
+    this.nearestAgent = { agent: null, distSq: Infinity };
   }
 
   update() {
@@ -368,41 +375,26 @@ class Predator {
       }
     }
 
-    let nearest;
-    let minDist = 175 ** 2;
-    
-    if (this.cooldown === 0) {
-      for (let ind of population) {
+    if (!this.cooldown) {
+      let ind = this.nearestAgent.agent;
+      let distSq = this.nearestAgent.distSq;
+
+      if (distSq < 20 ** 2) {
+        population.splice(population.indexOf(ind), 1);
+        ind.energy -= 5;
+        this.x = Math.random() * world.width;
+        this.y = Math.random() * world.height;
+      } else if (distSq < (seeRange - 20) ** 2) {
         let dx = wrappedDist(this.x, ind.x, world.width);
         let dy = wrappedDist(this.y, ind.y, world.height);
-        let distSq = dx * dx + dy * dy;
+        let dist = Math.sqrt(distSq);
 
-        if (distSq < 20 ** 2) {
-          // population.splice(population.indexOf(ind), 1);
-          ind.energy -= 5;
-          this.x = Math.random() * world.width;
-          this.y = Math.random() * world.height;
-
-          this.cooldown = predatorCooldown;
-          break;
-        }
-
-        if (distSq < minDist) {
-          nearest = ind;
-          minDist = distSq;
-        }
+        this.x += dx / dist * predSpeed;
+        this.y += dy / dist * predSpeed;
       }
     }
 
-    if (nearest) {
-      let dx = wrappedDist(this.x, nearest.x, world.width);
-      let dy = wrappedDist(this.y, nearest.y, world.height);
-      let distSq = dx * dx + dy * dy;
-      let dist = Math.sqrt(distSq);
-
-      this.x += dx / dist * predSpeed;
-      this.y += dy / dist * predSpeed;
-    }
+    this.nearestAgent = { agent: null, distSq: Infinity };
 
     if (this.x < 0) this.x += world.width;
     if (this.y < 0) this.y += world.height;
