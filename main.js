@@ -25,6 +25,7 @@ const maxGenerationlength = 10000;
 const genePoolSize = 20;
 const predatorCooldown = 200;
 const foodCount = 100;
+const predSeeRange = seeRange - 20;
 
 let population = [];
 let allFood = [];
@@ -77,11 +78,11 @@ function step() {
     }
 
     population = population.filter(ind => ind.energy >= 0);
-
-    // if (stepCounter % (maxGenerationlength / 2) === 0) updateGraph();
+    // population.sort((a, b) => b.energy - a.energy);
 
     if (population.length <= genePoolSize || stepCounter <= 0) {
       updateGraph();
+
       population.sort((a, b) => b.energy - a.energy);
       lastBest = population[0];
 
@@ -335,7 +336,6 @@ function updateGraph() {
 }
 
 ctx.lineWidth = 3;
-ctx.strokeStyle = "red";
 
 function draw() {
   ctx.clearRect(0, 0, world.width, world.height);
@@ -350,6 +350,7 @@ function draw() {
   }
 
   // agents
+  ctx.strokeStyle = "red";
   for (let ind of population) {
     // ctx.fillStyle = "rgba(255, 0, 0, 0.1)";
     // ctx.beginPath();
@@ -378,6 +379,12 @@ function draw() {
       ctx.strokeStyle = "red";
     }
   }
+
+  // let best = population[0];
+  // ctx.beginPath();
+  // ctx.strokeStyle = "lightgreen";
+  // ctx.arc(best.x, best.y, 30, 0, Math.PI * 2);
+  // ctx.stroke();
 
   // predators
   for (let ind of predators) {

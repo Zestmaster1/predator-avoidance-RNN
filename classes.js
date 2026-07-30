@@ -118,6 +118,7 @@ class Agent {
       W_hidden_hidden: this.neuralNet.W_hidden_hidden,
       W_hidden_output: this.neuralNet.W_hidden_output,
       alpha: this.neuralNet.alpha,
+
       generation: this.generation
     };
   }
@@ -384,7 +385,8 @@ class Predator {
         ind.energy -= 5;
         this.x = Math.random() * world.width;
         this.y = Math.random() * world.height;
-      } else if (distSq < (seeRange - 20) ** 2) {
+        this.cooldown = predatorCooldown;
+      } else if (predSeeRange ** 2) {
         let dx = wrappedDist(this.x, ind.x, world.width);
         let dy = wrappedDist(this.y, ind.y, world.height);
         let dist = Math.sqrt(distSq);

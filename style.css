@@ -28,7 +28,7 @@ canvas {
   flex-direction: column;
   gap: 5px;
   margin-left: -15px;
-  --scale: calc(60vh / 1000px);
+  --scale: calc(55vh / 1000px);
   transform-origin: top left;
   transform: scale(var(--scale));
 }
@@ -77,9 +77,10 @@ td {
   margin-bottom: 0;
 }
 
-.slider-row label {
-  width: 250px;
+label {
+  width: 275px;
   flex-shrink: 0;
+  font-size: 1.25em;
 }
 
 .slider-row input[type="range"] {
@@ -87,6 +88,10 @@ td {
 }
 
 button {
+  font-size: 1.2em;
+}
+
+.button-group button {
   font-size: 1.5em;
 }
 

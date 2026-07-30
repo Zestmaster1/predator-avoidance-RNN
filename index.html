@@ -67,7 +67,7 @@
         </div>
 
         <div class="slider-row">
-          <label for="crossoverChance">Crossover Chance (0 - 100%): </label>
+          <label for="crossoverChance">Crossover Rate (0 - 100%): </label>
           <input
             id="crossoverChance"
             type="range"
@@ -84,13 +84,13 @@
         </div>
 
         <div class="slider-row">
-          <label for="mutationRate">Mutation Rate (0 - 100%): </label>
+          <label for="mutationRate">Mutation Rate (0 - 50%): </label>
           <input
             id="mutationRate"
             type="range"
             min="0"
-            max="1"
-            step="0.1"
+            max="0.5"
+            step="0.05"
             value="0.1"
             oninput="handleInput()">
           <button onclick="
@@ -127,8 +127,6 @@
             for (let ind of population)
               if (Math.random() < 0.5)
                 ind.neuralNet.mutate();">Irradiate Population</button>
-
-          <button onclick="saveAgent(lastBest);">download last best</button>
         </div>
       </section>
 
@@ -143,18 +141,28 @@
       </section>
 
       <section class="panel">
-        <h2>upload agent</h2>
+        <h2>Import/Export</h2>
+        <div class="button-group">
+          <button onclick="saveAgent(lastBest);">Download Last Best agent</button>
+          <button onclick="saveWorld();">Download World</button>
+        </div>
+        <br>
+        <label for="networkFile">agent:</label>
         <input type="file" id="networkFile" accept=".json">
+        <button onclick="loadAgent();">Import Agent</button>
+        <br>
+        <br>
+        <label for="worldFile">world:</label>
+        <input type="file" id="worldFile" accept=".json">
+        <button onclick="loadWorld();">Import World</button>
         <br>
         <br>
         <div class="button-group">
-          <button onclick="loadAgent()">Upload Agent</button>
-          <button onclick="refreshWithAgent();">refresh with agent</button>
+          <button onclick="refreshWithAgent();">Refresh With Agent</button>
         </div>
         <br>
-        <br>
         <label for="uploadMarkers">upload markers: </label>
-        <input id="uploadMarkers" type="checkbox" oninput="handleInput()">
+        <input id="uploadMarkers" type="checkbox" oninput="handleInput();">
       </section>
 
     </div>
