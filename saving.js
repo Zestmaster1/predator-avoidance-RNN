@@ -21,8 +21,6 @@ function importAgent(data) {
   net.W_hidden_hidden = data.W_hidden_hidden;
   net.W_hidden_output = data.W_hidden_output;
 
-  net.alpha = data.alpha;
-
   let agent = new Agent(null, null, net);
   agent.generation = data.generation;
 
@@ -117,7 +115,7 @@ function saveWorld() {
 
   world.stepCounter = stepCounter;
   world.predSpeed = predSpeed;
-  world.crossoverChance = crossoverChance;
+  world.crossover = crossover;
   world.mutationRate = mutationRate;
 
   let data = JSON.stringify(world);
@@ -186,11 +184,11 @@ function loadWorld(data) {
 
     stepCounter = data.stepCounter;
     mutationRate = data.mutationRate;
-    crossoverChance = data.crossoverChance;
+    crossover = data.crossover;
     predSpeed = data.predSpeed;
 
     document.getElementById("mutationRate").value = mutationRate;
-    document.getElementById("crossoverChance").value = crossoverChance;
+    document.getElementById("crossover").checked = crossover;
     document.getElementById("predSpeed").value = predSpeed;
   };
 

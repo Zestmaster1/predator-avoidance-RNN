@@ -55,30 +55,13 @@
             id="predSpeed"
             type="range"
             min="0"
-            max="0.5"
+            max="0.8"
             step="0.05"
-            value="0.25"
+            value="0.4"
             oninput="handleInput()">
 
           <button onclick="
-            document.getElementById('predSpeed').value = 0.25;
-            handleInput();">
-            R</button>
-        </div>
-
-        <div class="slider-row">
-          <label for="crossoverChance">Crossover Rate (0 - 100%): </label>
-          <input
-            id="crossoverChance"
-            type="range"
-            min="0"
-            max="1"
-            step="0.1"
-            value="0.5"
-            oninput="handleInput()">
-
-          <button onclick="
-            document.getElementById('crossoverChance').value = 0.5;
+            document.getElementById('predSpeed').value = 0.4;
             handleInput();">
             R</button>
         </div>
@@ -91,12 +74,21 @@
             min="0"
             max="0.5"
             step="0.05"
-            value="0.1"
+            value="0.25"
             oninput="handleInput()">
           <button onclick="
-            document.getElementById('mutationRate').value = 0.1;
+            document.getElementById('mutationRate').value = 0.25;
             handleInput();">
             R</button>
+        </div>
+
+        <div class="slider-row">
+          <label for="crossover">Crossover: </label>
+          <input
+            id="crossover"
+            type="checkbox"
+            onclick="handleInput()"
+            checked>
         </div>
       </section>
 
@@ -135,9 +127,9 @@
         <br>
         <p>black = agent population</p>
         <p>red = predator population</p>
-        <p>blue = alpha; avg neural net alpha coefficient</p>
+        <p>blue = starvation; avg starvation (normalized), including starvation deaths</p>
         <p>green = diversity; proportion of unique individuals in %</p>
-        <p>purple = avg energy / 100</p>
+        <p>pink = avg energy / 100</p>
       </section>
 
       <section class="panel">

@@ -13,19 +13,21 @@ let generationDisplay = document.getElementById("genDisplay");
 let predatorDisplay = document.getElementById("predDisplay");
 let stepsLeftDisplay = document.getElementById("stepsLeft");
 
-const inputNodes = 6;
+const inputNodes = 7;
 const hiddenNodes = 20;
 const outputNodes = 2;
 
-const mutationDelta = 0.5;
+const populationSize = 150;
+const mutationDelta = 1;
 const parameterMutationChance = 0.01;
 const seeRange = 200;
-const populationSize = 100;
 const maxGenerationlength = 10000;
 const genePoolSize = 20;
 const predatorCooldown = 200;
 const foodCount = 100;
 const predSeeRange = seeRange - 20;
+const maxStarvation = 4000;
+const alpha = 0.3;
 
 let population = [];
 let allFood = [];
@@ -33,9 +35,9 @@ let predators = [];
 
 let simSpeed = Number(document.getElementById("simSpeed").value);
 let predSpeed = Number(document.getElementById("predSpeed").value);
-let crossoverChance = Number(document.getElementById("crossoverChance").value);
+let mutationRate = Number(document.getElementById("mutationRate").value);
 
-let mutationRate = document.getElementById("mutationRate").value;
+let crossover = document.getElementById("crossover").checked;
 let uploadMarkers = document.getElementById("uploadMarkers").checked;
 
 function wrappedDist(a, b, range) {
@@ -61,7 +63,11 @@ function softsign(x) {
 let stepCounter = maxGenerationlength;
 let lastBest;
 
+let starved = 0;
+let predated = 0;
+
 function step() {
+
   for (let i = 0; i < simSpeed; i++) {
     stepCounter--;
 
@@ -82,6 +88,9 @@ function step() {
 
     if (population.length <= genePoolSize || stepCounter <= 0) {
       updateGraph();
+
+      starved = 0;
+      predated = 0;
 
       population.sort((a, b) => b.energy - a.energy);
       lastBest = population[0];
@@ -125,7 +134,7 @@ function step() {
 
           let mate = chosen;
           
-          if (Math.random() < crossoverChance) {
+          if (crossover) {
             mate = chosen;
             while (mate === chosen) {
               mate = population[Math.floor(Math.random() * mateSearchRange)];
@@ -161,8 +170,9 @@ function displayStats() {
 function handleInput() {
   simSpeed = Number(document.getElementById("simSpeed").value);
   predSpeed = Number(document.getElementById("predSpeed").value);
-  crossoverChance =  Number(document.getElementById("crossoverChance").value);
   mutationRate = Number(document.getElementById("mutationRate").value);
+
+  crossover = document.getElementById("crossover").checked;
   uploadMarkers = document.getElementById("uploadMarkers").checked;
 }
 
@@ -203,13 +213,14 @@ function genomeDistance(a, b) {
 }
 
 graphCtx.lineWidth = 5;
+let lineAlpha = 0.5;
 
 let dataSpan = 20;
 
 let popPoints = new Array(dataSpan).fill(0);
 let predPoints = new Array(dataSpan).fill(0);
 let diversityPoints = new Array(dataSpan).fill(0);
-let alphaPoints = new Array(dataSpan).fill(0);
+let starvationPoints = new Array(dataSpan).fill(0);
 let energyPoints = new Array(dataSpan).fill(0);
 
 function updateGraph() {
@@ -243,25 +254,67 @@ function updateGraph() {
   predPoints.push(predators.length);
 
   diversityPoints.splice(0, 1);
-  alphaPoints.splice(0, 1);
+  starvationPoints.splice(0, 1);
   energyPoints.splice(0, 1);
 
-  let alphaSum = 0;
+  let starvationSum = starved * maxStarvation;
   let energySum = 0;
   if (population.length > 0) {
 
     for (let ind of population) {
-      alphaSum += ind.neuralNet.alpha;
+      starvationSum += ind.starvation;
       energySum += ind.energy;
     }
 
     diversityPoints.push(diversity() / population.length);
-    alphaPoints.push(alphaSum / population.length);
+    starvationPoints.push(starvationSum / maxStarvation / (populationSize - predated));
     energyPoints.push(energySum / population.length);
   } else {
     diversityPoints.push(0);
-    alphaPoints.push(0);
+    starvationPoints.push(0);
     energyPoints.push(0);
+  }
+
+  // diversity
+  graphCtx.strokeStyle = `rgba(50, 255, 0, ${lineAlpha})`;
+  for (let i = 0; i < diversityPoints.length - 1; i++) {
+    let x = (i / (diversityPoints.length - 1)) * graph.width;
+    let y = graph.height - (diversityPoints[i]) * graph.height;
+
+    graphCtx.beginPath();
+    graphCtx.moveTo(x, y);
+    let x2 = ((i + 1) / (diversityPoints.length - 1)) * graph.width;
+    let y2 = graph.height - (diversityPoints[i + 1]) * graph.height;
+    graphCtx.lineTo(x2, y2);
+    graphCtx.stroke();
+  }
+
+  // avg starvation
+  graphCtx.strokeStyle = `rgba(0, 0, 255, ${lineAlpha})`;
+  for (let i = 0; i < starvationPoints.length - 1; i++) {
+    let x = (i / (starvationPoints.length - 1)) * graph.width;
+    let y = graph.height - (starvationPoints[i]) * graph.height;
+
+    graphCtx.beginPath();
+    graphCtx.moveTo(x, y);
+    let x2 = ((i + 1) / (starvationPoints.length - 1)) * graph.width;
+    let y2 = graph.height - (starvationPoints[i + 1]) * graph.height;
+    graphCtx.lineTo(x2, y2);
+    graphCtx.stroke();
+  }
+
+  // avg energy
+  graphCtx.strokeStyle = `rgba(255, 0, 255, ${lineAlpha})`;
+  for (let i = 0; i < energyPoints.length - 1; i++) {
+    let x = (i / (energyPoints.length - 1)) * graph.width;
+    let y = graph.height - (energyPoints[i] / 100) * graph.height;
+
+    graphCtx.beginPath();
+    graphCtx.moveTo(x, y);
+    let x2 = ((i + 1) / (energyPoints.length - 1)) * graph.width;
+    let y2 = graph.height - (energyPoints[i + 1] / 100) * graph.height;
+    graphCtx.lineTo(x2, y2);
+    graphCtx.stroke();
   }
 
   // population
@@ -279,7 +332,7 @@ function updateGraph() {
   }
 
   // predators
-  graphCtx.strokeStyle = "rgba(255, 0, 0, 0.5)";
+  graphCtx.strokeStyle = `rgba(255, 0, 0, ${lineAlpha})`;
   for (let i = 0; i < predPoints.length - 1; i++) {
     let x = (i / (predPoints.length - 1)) * graph.width;
     let y = graph.height - (predPoints[i] / populationSize) * graph.height;
@@ -288,48 +341,6 @@ function updateGraph() {
     graphCtx.moveTo(x, y);
     let x2 = ((i + 1) / (predPoints.length - 1)) * graph.width;
     let y2 = graph.height - (predPoints[i + 1] / populationSize) * graph.height;
-    graphCtx.lineTo(x2, y2);
-    graphCtx.stroke();
-  }
-
-  // diversity
-  graphCtx.strokeStyle = "rgba(50, 255, 0, 0.5)";
-  for (let i = 0; i < diversityPoints.length - 1; i++) {
-    let x = (i / (diversityPoints.length - 1)) * graph.width;
-    let y = graph.height - (diversityPoints[i]) * graph.height;
-
-    graphCtx.beginPath();
-    graphCtx.moveTo(x, y);
-    let x2 = ((i + 1) / (diversityPoints.length - 1)) * graph.width;
-    let y2 = graph.height - (diversityPoints[i + 1]) * graph.height;
-    graphCtx.lineTo(x2, y2);
-    graphCtx.stroke();
-  }
-
-  // avg alpha
-  graphCtx.strokeStyle = "rgba(0, 0, 255, 0.5)";
-  for (let i = 0; i < alphaPoints.length - 1; i++) {
-    let x = (i / (alphaPoints.length - 1)) * graph.width;
-    let y = graph.height - (alphaPoints[i]) * graph.height;
-
-    graphCtx.beginPath();
-    graphCtx.moveTo(x, y);
-    let x2 = ((i + 1) / (alphaPoints.length - 1)) * graph.width;
-    let y2 = graph.height - (alphaPoints[i + 1]) * graph.height;
-    graphCtx.lineTo(x2, y2);
-    graphCtx.stroke();
-  }
-
-  // avg energy
-  graphCtx.strokeStyle = "rgba(255, 0, 255, 0.5)";
-  for (let i = 0; i < energyPoints.length - 1; i++) {
-    let x = (i / (energyPoints.length - 1)) * graph.width;
-    let y = graph.height - (energyPoints[i] / 100) * graph.height;
-
-    graphCtx.beginPath();
-    graphCtx.moveTo(x, y);
-    let x2 = ((i + 1) / (energyPoints.length - 1)) * graph.width;
-    let y2 = graph.height - (energyPoints[i + 1] / 100) * graph.height;
     graphCtx.lineTo(x2, y2);
     graphCtx.stroke();
   }

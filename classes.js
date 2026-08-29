@@ -5,6 +5,7 @@ class Agent {
     this.neuralNet = neuralNet ?? new NeuralNet();
     this.angle = Math.random() * Math.PI * 2;
     this.energy = 0;
+    this.starvation = 0;
 
     this.fx = Math.cos(this.angle);
     this.fy = Math.sin(this.angle);
@@ -15,13 +16,22 @@ class Agent {
   }
 
   update() {
+    this.starvation++;
+
     this.senseNearestFood();
     this.senseNearestPredator();
 
+    if (this.starvation >= maxStarvation) {
+      this.energy = -1;
+      starved++;
+      return;
+    }
+
+    this.neuralNet.V_input[6] = this.starvation / maxStarvation;
     this.neuralNet.update();
     
     this.angle += this.neuralNet.V_output[0] / 10;
-    let speed = Math.max(0, this.neuralNet.V_output[1]) / 1.5;
+    let speed = Math.max(0, this.neuralNet.V_output[1]);
     this.x += Math.cos(this.angle) * speed;
     this.y += Math.sin(this.angle) * speed;
 
@@ -49,6 +59,7 @@ class Agent {
         ind.x = Math.random() * world.width;
         ind.y = Math.random() * world.height;
         this.energy++;
+        this.starvation = 0;
         break;
       }
 
@@ -101,7 +112,9 @@ class Agent {
   }
 
   reproduce(mate) {
-    let childNeuralNet = this.neuralNet.crossover(mate.neuralNet);
+    let childNeuralNet = crossover ?
+                         this.neuralNet.crossover(mate.neuralNet) :
+                         this.neuralNet.clone();
     if (Math.random() < mutationRate) childNeuralNet.mutate();
     let child = new Agent(null, null, childNeuralNet, this.generation + 1);
     if (uploadMarkers) {
@@ -117,7 +130,6 @@ class Agent {
       W_input_hidden: this.neuralNet.W_input_hidden,
       W_hidden_hidden: this.neuralNet.W_hidden_hidden,
       W_hidden_output: this.neuralNet.W_hidden_output,
-      alpha: this.neuralNet.alpha,
 
       generation: this.generation
     };
@@ -136,8 +148,6 @@ class NeuralNet {
     this.W_input_hidden = [];
     this.W_hidden_hidden = [];
     this.W_hidden_output = [];
-
-    this.alpha = 0;
 
     if (random) this.initialize();
   }
@@ -179,10 +189,6 @@ class NeuralNet {
       }
       this.W_hidden_output.push(row);
     }
-
-    // inertia
-    this.alpha = Math.random() / 2;
-    // this.inertia = Math.random();
   }
 
   update() {
@@ -202,8 +208,8 @@ class NeuralNet {
       }
 
       newHidden[i] =
-        (1 - this.alpha) * this.V_hidden[i] +
-        this.alpha * softsign(sum);
+        (1 - alpha) * this.V_hidden[i] +
+        alpha * softsign(sum);
     }
 
     this.V_hidden = newHidden;
@@ -215,10 +221,6 @@ class NeuralNet {
       for (let j = 0; j < hiddenNodes; j++) {
         sum += this.V_hidden[j] * this.W_hidden_output[j][i];
       }
-
-      // this.V_output[i] =
-      //   this.inertia * this.V_output[i] +
-      //   (1 - this.inertia) * softsign(sum);
 
       this.V_output[i] = softsign(sum);
     }
@@ -235,8 +237,6 @@ class NeuralNet {
     child.W_input_hidden = this.W_input_hidden.map(r => r.slice());
     child.W_hidden_hidden = this.W_hidden_hidden.map(r => r.slice());
     child.W_hidden_output = this.W_hidden_output.map(r => r.slice());
-
-    child.alpha = this.alpha;
 
     return child;
   }
@@ -284,8 +284,6 @@ class NeuralNet {
         }
       }
     }
-
-    if (Math.random() < 0.5) child.alpha = mate.alpha;
 
     return child;
   }
@@ -382,7 +380,9 @@ class Predator {
 
       if (distSq < 20 ** 2) {
         population.splice(population.indexOf(ind), 1);
-        ind.energy -= 5;
+        // ind.energy -= 5;
+        predated++;
+
         this.x = Math.random() * world.width;
         this.y = Math.random() * world.height;
         this.cooldown = predatorCooldown;
