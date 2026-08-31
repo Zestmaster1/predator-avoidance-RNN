@@ -5,6 +5,7 @@ body {
 canvas {
   border: 1px solid black;
   gap: 0px;
+  background-color: white;
 }
 
 #world {

@@ -27,7 +27,9 @@ const predatorCooldown = 200;
 const foodCount = 100;
 const predSeeRange = seeRange - 20;
 const maxStarvation = 4000;
+const maxEnergy = 100;
 const alpha = 0.3;
+const k = 3;
 
 let population = [];
 let allFood = [];
@@ -76,7 +78,7 @@ function step() {
     for (let ind of allFood) {
       ind.timer++;
 
-      if (ind.timer === 2500) {
+      if (ind.timer >= 2500) {
         ind.x = Math.random() * world.width;
         ind.y = Math.random() * world.height;
         ind.timer = 0;
@@ -97,8 +99,8 @@ function step() {
 
       if (population.length === 0) {
         for (let i = 0; i < populationSize; i++) population.push(new Agent());
-      } else {
 
+      } else {
         for (let ind of allFood) {
           ind.x = Math.random() * world.width;
           ind.y = Math.random() * world.height;
@@ -110,34 +112,43 @@ function step() {
         }
 
         let totalEnergy = 0;
-
         for (let ind of population) {
           totalEnergy += ind.energy;
         }
 
         let newPopulation = [];
-        let mateSearchRange = Math.min(genePoolSize, population.length);
+
+        newPopulation.push(lastBest.reproduce(lastBest));
 
         for (let i = 0; i < populationSize - 1; i++) {
-          if (i === 0) newPopulation.push(lastBest.reproduce(lastBest));
-
-          let r = Math.random() * totalEnergy;
           let chosen;
+          // let r = Math.random() * totalEnergy;
           
-          for (let ind of population) {
-            r -= ind.energy;
-            if (r <= 0) {
-              chosen = ind;
-              break;
-            }
+          // for (let ind of population) {
+          //   r -= ind.energy;
+          //   if (r <= 0) {
+          //     chosen = ind;
+          //     break;
+          //   }
+          // }
+
+          chosen = population[Math.floor(Math.random() * population.length)];
+
+          for (let j = 0; j < k; j++) {
+            let temp = population[Math.floor(Math.random() * population.length)];
+            if (temp.energy > chosen.energy) chosen = temp;
           }
 
           let mate = chosen;
           
           if (crossover) {
-            mate = chosen;
             while (mate === chosen) {
-              mate = population[Math.floor(Math.random() * mateSearchRange)];
+              mate = population[Math.floor(Math.random() * population.length)];
+
+              for (let j = 0; j < k; j++) {
+                let temp = population[Math.floor(Math.random() * population.length)];
+                if (temp.energy > mate.energy) mate = temp;
+              }
             }
           }
 
@@ -307,12 +318,12 @@ function updateGraph() {
   graphCtx.strokeStyle = `rgba(255, 0, 255, ${lineAlpha})`;
   for (let i = 0; i < energyPoints.length - 1; i++) {
     let x = (i / (energyPoints.length - 1)) * graph.width;
-    let y = graph.height - (energyPoints[i] / 100) * graph.height;
+    let y = graph.height - (energyPoints[i] / maxEnergy) * graph.height;
 
     graphCtx.beginPath();
     graphCtx.moveTo(x, y);
     let x2 = ((i + 1) / (energyPoints.length - 1)) * graph.width;
-    let y2 = graph.height - (energyPoints[i + 1] / 100) * graph.height;
+    let y2 = graph.height - (energyPoints[i + 1] / maxEnergy) * graph.height;
     graphCtx.lineTo(x2, y2);
     graphCtx.stroke();
   }

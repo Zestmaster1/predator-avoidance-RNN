@@ -58,7 +58,7 @@ class Agent {
         ind.age = Infinity;
         ind.x = Math.random() * world.width;
         ind.y = Math.random() * world.height;
-        this.energy++;
+        this.energy = Math.min(maxEnergy, this.energy + 1);
         this.starvation = 0;
         break;
       }
