@@ -41,7 +41,7 @@
             min="1"
             max="25"
             value="1"
-            oninput="handleInput()">
+            oninput="handleInput();">
 
           <button onclick="
             document.getElementById('simSpeed').value = 1;
@@ -58,7 +58,7 @@
             max="0.8"
             step="0.05"
             value="0.4"
-            oninput="handleInput()">
+            oninput="handleInput();">
 
           <button onclick="
             document.getElementById('predSpeed').value = 0.4;
@@ -87,8 +87,38 @@
           <input
             id="crossover"
             type="checkbox"
-            onclick="handleInput()"
+            onclick="handleInput();"
             checked>
+        </div>
+
+        <div class="slider-row">
+          <label for="foodCount">Food count: </label>
+          <input
+            id="foodCount"
+            type="number"
+            min="0"
+            max="500"
+            value="100"
+            onchange="handleInput();">
+          <button onclick="
+            document.getElementById('foodCount').value = 100;
+            handleInput();">
+            R</button>
+        </div>
+
+        <div class="slider-row">
+          <label for="maxStarvation">Max starvation duration: </label>
+          <input
+            id="maxStarvation"
+            type="number"
+            min="0"
+            max="10000"
+            value="4000"
+            onchange="handleInput();">
+          <button onclick="
+            document.getElementById('maxStarvation').value = 4000;
+            handleInput();">
+            R</button>
         </div>
       </section>
 
@@ -127,9 +157,9 @@
         <br>
         <p>black = agent population</p>
         <p>red = predator population</p>
-        <p>blue = starvation; avg starvation (normalized), including starvation deaths</p>
-        <p>green = diversity; proportion of unique individuals in %</p>
-        <p>pink = avg energy / 100</p>
+        <p>blue = starvation; avg starvation, including starvation deaths</p>
+        <p>green = genetic diversity; proportion of unique individuals in %</p>
+        <p>pink = avg energy</p>
       </section>
 
       <section class="panel">
@@ -153,8 +183,16 @@
           <button onclick="refreshWithAgent();">Refresh With Agent</button>
         </div>
         <br>
+      </section>
+
+      <section class="panel">
+        <h2>Visualization</h2>
+
         <label for="uploadMarkers">upload markers: </label>
         <input id="uploadMarkers" type="checkbox" oninput="handleInput();">
+
+        <label for="drawVisualField">draw visual field: </label>
+        <input id="drawVisualField" type="checkbox" oninput="handleInput();">
       </section>
 
     </div>
