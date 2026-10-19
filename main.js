@@ -14,7 +14,7 @@ let predatorDisplay = document.getElementById("predDisplay");
 let stepsLeftDisplay = document.getElementById("stepsLeft");
 
 const inputNodes = 7;
-const hiddenNodes = 20;
+const hiddenNodes = 15;
 const outputNodes = 2;
 
 const populationSize = 150;
@@ -24,9 +24,7 @@ const seeRange = 200;
 const maxGenerationlength = 10000;
 const genePoolSize = 20;
 const predatorCooldown = 200;
-const foodCount = 100;
 const predSeeRange = seeRange - 20;
-const maxStarvation = 4000;
 const maxEnergy = 100;
 const alpha = 0.3;
 const k = 3;
@@ -38,9 +36,12 @@ let predators = [];
 let simSpeed = Number(document.getElementById("simSpeed").value);
 let predSpeed = Number(document.getElementById("predSpeed").value);
 let mutationRate = Number(document.getElementById("mutationRate").value);
+let foodCount = Number(document.getElementById("foodCount").value);
+let maxStarvation = Number(document.getElementById("maxStarvation").value);
 
 let crossover = document.getElementById("crossover").checked;
 let uploadMarkers = document.getElementById("uploadMarkers").checked;
+let drawVisualField = document.getElementById("drawVisualField").checked;
 
 function wrappedDist(a, b, range) {
   let d = b - a;
@@ -79,6 +80,14 @@ function step() {
       ind.timer++;
 
       if (ind.timer >= 2500) {
+        for (let ind of population) {
+          let dx = ind.x - this.x;
+          let dy = ind.y - this.y;
+          let distSq = dx * dx + dy * dy;
+
+          if (distSq < seeRange ** 2) continue;
+        }
+
         ind.x = Math.random() * world.width;
         ind.y = Math.random() * world.height;
         ind.timer = 0;
@@ -158,6 +167,8 @@ function step() {
         population = newPopulation;
       }
 
+      predators.forEach(ind => ind.cooldown = predatorCooldown);
+
       stepCounter = maxGenerationlength;
     }
 
@@ -182,9 +193,23 @@ function handleInput() {
   simSpeed = Number(document.getElementById("simSpeed").value);
   predSpeed = Number(document.getElementById("predSpeed").value);
   mutationRate = Number(document.getElementById("mutationRate").value);
+  maxStarvation = Number(document.getElementById("maxStarvation").value);
+
+  let temp = Number(document.getElementById("foodCount").value);
+  if (foodCount > temp) {
+    for (let i = temp; i < foodCount; i++) {
+      allFood.pop();
+    }
+  } else if (foodCount < temp) {
+    for (let i = foodCount; i < temp; i++) {
+      allFood.push(new Food());
+    }
+  }
+  foodCount = temp;
 
   crossover = document.getElementById("crossover").checked;
   uploadMarkers = document.getElementById("uploadMarkers").checked;
+  drawVisualField = document.getElementById("drawVisualField").checked;
 }
 
 let speciesThreshold = 0;
@@ -259,11 +284,11 @@ function updateGraph() {
     graphCtx.stroke();
   }
 
-  popPoints.splice(0, 1);
   popPoints.push(population.length);
-  predPoints.splice(0, 1);
   predPoints.push(predators.length);
 
+  popPoints.splice(0, 1);
+  predPoints.splice(0, 1);
   diversityPoints.splice(0, 1);
   starvationPoints.splice(0, 1);
   energyPoints.splice(0, 1);
@@ -374,11 +399,13 @@ function draw() {
   // agents
   ctx.strokeStyle = "red";
   for (let ind of population) {
-    // ctx.fillStyle = "rgba(255, 0, 0, 0.1)";
-    // ctx.beginPath();
-    // ctx.arc(ind.x, ind.y, seeRange, 0, Math.PI * 2);
-    // ctx.fill();
-    // ctx.fillStyle = "black";
+    if (drawVisualField) {
+      ctx.fillStyle = "rgba(255, 0, 0, 0.1)";
+      ctx.beginPath();
+      ctx.arc(ind.x, ind.y, seeRange, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "black";
+    }
 
     ctx.beginPath();
     ctx.moveTo(ind.x, ind.y);
