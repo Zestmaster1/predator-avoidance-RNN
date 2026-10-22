@@ -93,11 +93,6 @@ class Agent {
         nearest = ind;
         minDist = distSq;
       }
-
-      if (distSq < ind.nearestAgent.distSq) {
-        ind.nearestAgent.agent = this;
-        ind.nearestAgent.distSq = distSq;
-      }
     }
 
     if (nearest) {
@@ -350,8 +345,6 @@ class Predator {
     this.x = Math.random() * world.width;
     this.y = Math.random() * world.height;
     this.cooldown = cooldown ?? 0;
-
-    this.nearestAgent = { agent: null, distSq: Infinity };
   }
 
   update() {
@@ -375,28 +368,38 @@ class Predator {
     }
 
     if (!this.cooldown) {
-      let ind = this.nearestAgent.agent;
-      let distSq = this.nearestAgent.distSq;
+      let near;
+      let distSq = predSeeRange ** 2;
+      for (let ind of population) {
+        let dx = ind.x - this.x;
+        let dy = ind.y - this.y;
+        let dq = dx * dx + dy * dy;
+        
+        if (dq < distSq) {
+          near = ind;
+          distSq = dq;
+        }
+      }
 
-      if (distSq < 20 ** 2) {
-        population.splice(population.indexOf(ind), 1);
-        // ind.energy -= 5;
-        predated++;
+      if (near) {
+        if (distSq < 20 ** 2) {
+          population.splice(population.indexOf(near), 1);
+          // ind.energy -= 5;
+          predated++;
 
-        this.x = Math.random() * world.width;
-        this.y = Math.random() * world.height;
-        this.cooldown = predatorCooldown;
-      } else if (predSeeRange ** 2) {
-        let dx = wrappedDist(this.x, ind.x, world.width);
-        let dy = wrappedDist(this.y, ind.y, world.height);
-        let dist = Math.sqrt(distSq);
+          this.x = Math.random() * world.width;
+          this.y = Math.random() * world.height;
+          this.cooldown = predatorCooldown;
+        } else {
+          let dx = wrappedDist(this.x, near.x, world.width);
+          let dy = wrappedDist(this.y, near.y, world.height);
+          let dist = Math.sqrt(distSq);
 
-        this.x += dx / dist * predSpeed;
-        this.y += dy / dist * predSpeed;
+          this.x += dx / dist * predSpeed;
+          this.y += dy / dist * predSpeed;
+        }
       }
     }
-
-    this.nearestAgent = { agent: null, distSq: Infinity };
 
     if (this.x < 0) this.x += world.width;
     if (this.y < 0) this.y += world.height;

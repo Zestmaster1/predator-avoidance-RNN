@@ -17,7 +17,7 @@ const inputNodes = 7;
 const hiddenNodes = 15;
 const outputNodes = 2;
 
-const populationSize = 150;
+const populationSize = 100;
 const mutationDelta = 1;
 const parameterMutationChance = 0.01;
 const seeRange = 200;
@@ -26,7 +26,7 @@ const genePoolSize = 20;
 const predatorCooldown = 200;
 const predSeeRange = seeRange - 20;
 const maxEnergy = 100;
-const alpha = 0.3;
+const alpha = 0.3; // RNN node value decay
 const k = 3;
 
 let population = [];
@@ -95,7 +95,20 @@ function step() {
     }
 
     population = population.filter(ind => ind.energy >= 0);
-    // population.sort((a, b) => b.energy - a.energy);
+
+    if (population.length === 0) {
+      for (let i = 0; i < populationSize; i++) {
+        population.push(new Agent());
+      }
+
+      stepCounter = maxGenerationlength;
+      continue;
+    }
+
+    // if (population.length === 0) {
+    //   for (let i = 0; i < populationSize; i++) population.push(new Agent());
+    //   return;
+    // }
 
     if (population.length <= genePoolSize || stepCounter <= 0) {
       updateGraph();
@@ -106,69 +119,55 @@ function step() {
       population.sort((a, b) => b.energy - a.energy);
       lastBest = population[0];
 
-      if (population.length === 0) {
-        for (let i = 0; i < populationSize; i++) population.push(new Agent());
-
-      } else {
-        for (let ind of allFood) {
-          ind.x = Math.random() * world.width;
-          ind.y = Math.random() * world.height;
-        }
-
-        for (let ind of predators) {
-          ind.x = Math.random() * world.width;
-          ind.y = Math.random() * world.height;
-        }
-
-        let totalEnergy = 0;
-        for (let ind of population) {
-          totalEnergy += ind.energy;
-        }
-
-        let newPopulation = [];
-
-        newPopulation.push(lastBest.reproduce(lastBest));
-
-        for (let i = 0; i < populationSize - 1; i++) {
-          let chosen;
-          // let r = Math.random() * totalEnergy;
-          
-          // for (let ind of population) {
-          //   r -= ind.energy;
-          //   if (r <= 0) {
-          //     chosen = ind;
-          //     break;
-          //   }
-          // }
-
-          chosen = population[Math.floor(Math.random() * population.length)];
-
-          for (let j = 0; j < k; j++) {
-            let temp = population[Math.floor(Math.random() * population.length)];
-            if (temp.energy > chosen.energy) chosen = temp;
-          }
-
-          let mate = chosen;
-          
-          if (crossover) {
-            while (mate === chosen) {
-              mate = population[Math.floor(Math.random() * population.length)];
-
-              for (let j = 0; j < k; j++) {
-                let temp = population[Math.floor(Math.random() * population.length)];
-                if (temp.energy > mate.energy) mate = temp;
-              }
-            }
-          }
-
-          newPopulation.push(chosen.reproduce(mate));
-        }
-
-        population = newPopulation;
+      for (let ind of allFood) {
+        ind.x = Math.random() * world.width;
+        ind.y = Math.random() * world.height;
       }
 
-      predators.forEach(ind => ind.cooldown = predatorCooldown);
+      for (let ind of predators) {
+        ind.x = Math.random() * world.width;
+        ind.y = Math.random() * world.height;
+        ind.cooldown = predatorCooldown;
+      }
 
+      let totalEnergy = 0;
+      for (let ind of population) {
+        totalEnergy += ind.energy;
+      }
+
+      // create new generation
+
+      let newPopulation = [];
+
+      newPopulation.push(lastBest.reproduce(lastBest));
+
+      for (let i = 0; i < populationSize - 1; i++) {
+        let chosen = population[Math.floor(Math.random() * population.length)];
+
+        // tournament
+        for (let j = 0; j < k; j++) {
+          let temp = population[Math.floor(Math.random() * population.length)];
+          if (temp.energy > chosen.energy) chosen = temp;
+        }
+
+        let mate = chosen;
+        
+        if (crossover) {
+          while (mate === chosen) {
+            mate = population[Math.floor(Math.random() * population.length)];
+
+            // tournament
+            for (let j = 0; j < k; j++) {
+              let temp = population[Math.floor(Math.random() * population.length)];
+              if (temp.energy > mate.energy) mate = temp;
+            }
+          }
+        }
+
+        newPopulation.push(chosen.reproduce(mate));
+      }
+
+      population = newPopulation;
       stepCounter = maxGenerationlength;
     }
 
@@ -222,7 +221,7 @@ function diversity() {
 
     for (let rep of representatives) {
       if (
-        genomeDistance(agent.neuralNet,rep.neuralNet) <= speciesThreshold
+        genomeDistance(agent.neuralNet, rep.neuralNet) <= speciesThreshold
       ) {
         found = true;
         break;
@@ -239,10 +238,7 @@ function genomeDistance(a, b) {
   let d = 0;
 
   for (let i = 0; i < hiddenNodes; i++) {
-    d += Math.abs(
-      a.B_hidden[i] -
-      b.B_hidden[i]
-    );
+    d += Math.abs(a.B_hidden[i] - b.B_hidden[i]);
   }
 
   return d;
