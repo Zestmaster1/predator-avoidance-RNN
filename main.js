@@ -105,11 +105,6 @@ function step() {
       continue;
     }
 
-    // if (population.length === 0) {
-    //   for (let i = 0; i < populationSize; i++) population.push(new Agent());
-    //   return;
-    // }
-
     if (population.length <= genePoolSize || stepCounter <= 0) {
       updateGraph();
 
