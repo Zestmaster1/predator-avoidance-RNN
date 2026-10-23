@@ -1,3 +1,6 @@
+let worldID = "";
+for (let i = 0; i < 4; i++) worldID += JSON.stringify(Math.floor(Math.random() * 10));
+
 function saveAgent(agent) {
   let data = JSON.stringify(agent.export());
 
@@ -7,7 +10,7 @@ function saveAgent(agent) {
 
   let a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "networkdownload.json";
+  a.download = `network - gen ${agent.generation}, world ID ${worldID}.json`;
   a.click();
 }
 
@@ -28,7 +31,7 @@ function importAgent(data) {
 }
 
 function loadAgent() {
-  let input = document.getElementById("networkFile");
+  let input = document.getElementById(`networkFile`);
 
   if (input.files.length === 0) {
     return;
@@ -117,6 +120,8 @@ function saveWorld() {
   world.predSpeed = predSpeed;
   world.crossover = crossover;
   world.mutationRate = mutationRate;
+  world.foodCount = foodCount;
+  world.maxStarvation = maxStarvation;
 
   let data = JSON.stringify(world);
 
@@ -126,13 +131,13 @@ function saveWorld() {
 
   let a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "worldsave.json";
+  a.download = `world - gen ${generationDisplay.textContent}, world ID ${worldID}.json`;
   a.click();
 
   URL.revokeObjectURL(a.href);
 }
 
-function loadWorld(data) {
+function loadWorld() {
   let input = document.getElementById("worldFile");
 
   if (input.files.length === 0) return;
@@ -186,10 +191,16 @@ function loadWorld(data) {
     mutationRate = data.mutationRate;
     crossover = data.crossover;
     predSpeed = data.predSpeed;
+    foodCount = data.foodCount;
+    maxStarvation = data.maxStarvation;
 
     document.getElementById("mutationRate").value = mutationRate;
-    document.getElementById("crossover").checked = crossover;
     document.getElementById("predSpeed").value = predSpeed;
+    document.getElementById("foodCount").value = foodCount;
+    document.getElementById("maxStarvation").value = maxStarvation;
+    document.getElementById("crossover").checked = crossover;
+    
+    handleInput();
   };
 
   reader.readAsText(file);
