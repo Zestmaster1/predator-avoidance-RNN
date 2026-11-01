@@ -79,24 +79,33 @@ function step() {
     for (let ind of allFood) {
       ind.timer++;
 
+      let agentNear = false;
+
       if (ind.timer >= 2500) {
-        for (let ind of population) {
-          let dx = ind.x - this.x;
-          let dy = ind.y - this.y;
+        for (let agent of population) {
+          let dx = agent.x - ind.x;
+          let dy = agent.y - ind.y;
           let distSq = dx * dx + dy * dy;
 
-          if (distSq < seeRange ** 2) continue;
+          if (distSq < seeRange ** 2) {
+            agentNear = true;
+            break;
+          }
         }
 
-        ind.x = Math.random() * world.width;
-        ind.y = Math.random() * world.height;
-        ind.timer = 0;
+        if (!agentNear) {
+          ind.x = Math.random() * world.width;
+          ind.y = Math.random() * world.height;
+          ind.timer = 0;
+        }
       }
     }
 
     population = population.filter(ind => ind.energy >= 0);
 
     if (population.length === 0) {
+      updateGraph();
+
       for (let i = 0; i < populationSize; i++) {
         population.push(new Agent());
       }
@@ -112,7 +121,12 @@ function step() {
       predated = 0;
 
       population.sort((a, b) => b.energy - a.energy);
-      lastBest = population[0];
+      lastBest = new Agent(
+                          null,
+                          null,
+                          population[0].neuralNet.clone(),
+                          population[0].generation + 1
+                        );
 
       for (let ind of allFood) {
         ind.x = Math.random() * world.width;
@@ -242,16 +256,29 @@ function genomeDistance(a, b) {
 graphCtx.lineWidth = 5;
 let lineAlpha = 0.5;
 
-let dataSpan = 20;
+let maxDataSpan = 20; // 20;
+let dataSpan = 0;
 
-let popPoints = new Array(dataSpan).fill(0);
-let predPoints = new Array(dataSpan).fill(0);
-let diversityPoints = new Array(dataSpan).fill(0);
-let starvationPoints = new Array(dataSpan).fill(0);
-let energyPoints = new Array(dataSpan).fill(0);
+let popPoints = [];
+let predPoints = [];
+let diversityPoints = [];
+let starvationPoints = [];
+let energyPoints = [];
 
 function updateGraph() {
   graphCtx.clearRect(0, 0, graph.width, graph.height);
+
+  dataSpan++;
+
+  while (dataSpan > maxDataSpan) {
+    popPoints.shift();
+    predPoints.shift();
+    diversityPoints.shift();
+    starvationPoints.shift();
+    energyPoints.shift();
+
+    dataSpan--;
+  }
 
   // grid
   graphCtx.strokeStyle = "rgba(0, 0, 0, 0.1)";
@@ -278,13 +305,7 @@ function updateGraph() {
   popPoints.push(population.length);
   predPoints.push(predators.length);
 
-  popPoints.splice(0, 1);
-  predPoints.splice(0, 1);
-  diversityPoints.splice(0, 1);
-  starvationPoints.splice(0, 1);
-  energyPoints.splice(0, 1);
-
-  let starvationSum = starved * maxStarvation;
+  let starvationSum = 0; // starved * maxStarvation;
   let energySum = 0;
   if (population.length > 0) {
 
@@ -293,8 +314,8 @@ function updateGraph() {
       energySum += ind.energy;
     }
 
-    diversityPoints.push(diversity() / population.length);
-    starvationPoints.push(starvationSum / maxStarvation / (populationSize - predated));
+    diversityPoints.push(populationSize * diversity() / population.length);
+    starvationPoints.push(populationSize * starvationSum / (maxStarvation * population.length));
     energyPoints.push(energySum / population.length);
   } else {
     diversityPoints.push(0);
@@ -304,70 +325,34 @@ function updateGraph() {
 
   // diversity
   graphCtx.strokeStyle = `rgba(50, 255, 0, ${lineAlpha})`;
-  for (let i = 0; i < diversityPoints.length - 1; i++) {
-    let x = (i / (diversityPoints.length - 1)) * graph.width;
-    let y = graph.height - (diversityPoints[i]) * graph.height;
-
-    graphCtx.beginPath();
-    graphCtx.moveTo(x, y);
-    let x2 = ((i + 1) / (diversityPoints.length - 1)) * graph.width;
-    let y2 = graph.height - (diversityPoints[i + 1]) * graph.height;
-    graphCtx.lineTo(x2, y2);
-    graphCtx.stroke();
-  }
+  drawGraphLine(diversityPoints);
 
   // avg starvation
   graphCtx.strokeStyle = `rgba(0, 0, 255, ${lineAlpha})`;
-  for (let i = 0; i < starvationPoints.length - 1; i++) {
-    let x = (i / (starvationPoints.length - 1)) * graph.width;
-    let y = graph.height - (starvationPoints[i]) * graph.height;
-
-    graphCtx.beginPath();
-    graphCtx.moveTo(x, y);
-    let x2 = ((i + 1) / (starvationPoints.length - 1)) * graph.width;
-    let y2 = graph.height - (starvationPoints[i + 1]) * graph.height;
-    graphCtx.lineTo(x2, y2);
-    graphCtx.stroke();
-  }
+  drawGraphLine(starvationPoints);
 
   // avg energy
   graphCtx.strokeStyle = `rgba(255, 0, 255, ${lineAlpha})`;
-  for (let i = 0; i < energyPoints.length - 1; i++) {
-    let x = (i / (energyPoints.length - 1)) * graph.width;
-    let y = graph.height - (energyPoints[i] / maxEnergy) * graph.height;
-
-    graphCtx.beginPath();
-    graphCtx.moveTo(x, y);
-    let x2 = ((i + 1) / (energyPoints.length - 1)) * graph.width;
-    let y2 = graph.height - (energyPoints[i + 1] / maxEnergy) * graph.height;
-    graphCtx.lineTo(x2, y2);
-    graphCtx.stroke();
-  }
+  drawGraphLine(energyPoints);
 
   // population
   graphCtx.strokeStyle = "black";
-  for (let i = 0; i < popPoints.length - 1; i++) {
-    let x = (i / (popPoints.length - 1)) * graph.width;
-    let y = graph.height - (popPoints[i] / populationSize) * graph.height;
-
-    graphCtx.beginPath();
-    graphCtx.moveTo(x, y);
-    let x2 = ((i + 1) / (popPoints.length - 1)) * graph.width;
-    let y2 = graph.height - (popPoints[i + 1] / populationSize) * graph.height;
-    graphCtx.lineTo(x2, y2);
-    graphCtx.stroke();
-  }
+  drawGraphLine(popPoints);
 
   // predators
   graphCtx.strokeStyle = `rgba(255, 0, 0, ${lineAlpha})`;
-  for (let i = 0; i < predPoints.length - 1; i++) {
-    let x = (i / (predPoints.length - 1)) * graph.width;
-    let y = graph.height - (predPoints[i] / populationSize) * graph.height;
+  drawGraphLine(predPoints);
+}
+
+function drawGraphLine(arr) {
+  for (let i = 0; i < arr.length - 1; i++) {
+    let x = (i / (arr.length - 1)) * graph.width;
+    let y = graph.height - (arr[i] / populationSize) * graph.height;
 
     graphCtx.beginPath();
     graphCtx.moveTo(x, y);
-    let x2 = ((i + 1) / (predPoints.length - 1)) * graph.width;
-    let y2 = graph.height - (predPoints[i + 1] / populationSize) * graph.height;
+    let x2 = ((i + 1) / (arr.length - 1)) * graph.width;
+    let y2 = graph.height - (arr[i + 1] / populationSize) * graph.height;
     graphCtx.lineTo(x2, y2);
     graphCtx.stroke();
   }
