@@ -39,7 +39,7 @@ let mutationRate = Number(document.getElementById("mutationRate").value);
 let foodCount = Number(document.getElementById("foodCount").value);
 let maxStarvation = Number(document.getElementById("maxStarvation").value);
 
-let crossover = document.getElementById("crossover").checked;
+let doCrossover = document.getElementById("doCrossover").checked;
 let uploadMarkers = document.getElementById("uploadMarkers").checked;
 let drawVisualField = document.getElementById("drawVisualField").checked;
 
@@ -103,10 +103,10 @@ function step() {
 
     population = population.filter(ind => ind.energy >= 0);
 
-    if (population.length === 0) {
+    if (population.length < 2) {
       updateGraph();
 
-      for (let i = 0; i < populationSize; i++) {
+      for (let i = population.length; i < populationSize; i++) {
         population.push(new Agent());
       }
 
@@ -161,7 +161,7 @@ function step() {
 
         let mate = chosen;
         
-        if (crossover) {
+        if (doCrossover) {
           while (mate === chosen) {
             mate = population[Math.floor(Math.random() * population.length)];
 
@@ -215,7 +215,7 @@ function handleInput() {
   }
   foodCount = temp;
 
-  crossover = document.getElementById("crossover").checked;
+  doCrossover = document.getElementById("doCrossover").checked;
   uploadMarkers = document.getElementById("uploadMarkers").checked;
   drawVisualField = document.getElementById("drawVisualField").checked;
 }
@@ -305,7 +305,7 @@ function updateGraph() {
   popPoints.push(population.length);
   predPoints.push(predators.length);
 
-  let starvationSum = 0; // starved * maxStarvation;
+  let starvationSum = starved * maxStarvation / populationSize;
   let energySum = 0;
   if (population.length > 0) {
 

@@ -118,7 +118,7 @@ function saveWorld() {
 
   world.stepCounter = stepCounter;
   world.predSpeed = predSpeed;
-  world.crossover = crossover;
+  world.doCrossover = doCrossover;
   world.mutationRate = mutationRate;
   world.foodCount = foodCount;
   world.maxStarvation = maxStarvation;
@@ -189,7 +189,7 @@ function loadWorld() {
 
     stepCounter = data.stepCounter;
     mutationRate = data.mutationRate;
-    crossover = data.crossover;
+    doCrossover = data.doCrossover;
     predSpeed = data.predSpeed;
     foodCount = data.foodCount;
     maxStarvation = data.maxStarvation;
@@ -198,7 +198,7 @@ function loadWorld() {
     document.getElementById("predSpeed").value = predSpeed;
     document.getElementById("foodCount").value = foodCount;
     document.getElementById("maxStarvation").value = maxStarvation;
-    document.getElementById("crossover").checked = crossover;
+    document.getElementById("doCrossover").checked = doCrossover;
     
     handleInput();
   };
